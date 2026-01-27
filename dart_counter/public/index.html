@@ -1,0 +1,745 @@
+<!doctype html>
+<html lang="pl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    />
+    <title>Dart Target Custom</title>
+    <style>
+      :root {
+        --bg: #0f1115;
+        --panel: #161920;
+        --accent: #ff4a4a;
+        --text: #fff;
+        --subtext: #8b9bb4;
+        --green: #2ecc71;
+        --bot: #9b59b6;
+      }
+      * {
+        box-sizing: border-box;
+        -webkit-tap-highlight-color: transparent;
+        font-family: "Roboto", sans-serif;
+        user-select: none;
+      }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--text);
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+      }
+
+      /* SETUP SCREEN */
+      #setup {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 25px;
+        padding: 20px;
+      }
+      h1 {
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        color: var(--subtext);
+        margin: 0;
+      }
+
+      .config-block {
+        width: 100%;
+        max-width: 400px;
+        background: var(--panel);
+        padding: 20px;
+        border-radius: 12px;
+      }
+      .config-label {
+        font-size: 0.9rem;
+        font-weight: bold;
+        color: var(--subtext);
+        margin-bottom: 10px;
+        display: block;
+        text-transform: uppercase;
+      }
+
+      .input-row {
+        display: flex;
+        gap: 10px;
+      }
+      /* Pola wpisywania ręcznego */
+      .custom-input {
+        flex: 1;
+        background: #0a0c10;
+        border: 2px solid #333;
+        color: white;
+        padding: 15px;
+        font-size: 1.2rem;
+        font-weight: bold;
+        text-align: center;
+        border-radius: 8px;
+        outline: none;
+        transition: 0.2s;
+      }
+      .custom-input:focus {
+        border-color: var(--accent);
+      }
+
+      /* Małe przyciski presetów */
+      .preset-btn {
+        background: #252a35;
+        border: none;
+        color: #888;
+        padding: 10px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-weight: bold;
+        font-size: 0.9rem;
+      }
+      .preset-btn:active {
+        background: var(--accent);
+        color: white;
+      }
+
+      .play-btn {
+        background: linear-gradient(135deg, #ff4a4a, #d63031);
+        color: white;
+        border: none;
+        padding: 18px 60px;
+        font-size: 1.4rem;
+        font-weight: 800;
+        border-radius: 50px;
+        width: 100%;
+        max-width: 400px;
+        box-shadow: 0 4px 15px rgba(255, 74, 74, 0.4);
+        cursor: pointer;
+      }
+
+      /* GAME UI */
+      #game {
+        display: none;
+        flex-direction: column;
+        height: 100%;
+      }
+      .header {
+        display: flex;
+        justify-content: space-between;
+        padding: 15px;
+        background: #000;
+        border-bottom: 1px solid #222;
+        font-weight: bold;
+        color: var(--subtext);
+      }
+      .legs-score {
+        color: white;
+        font-size: 1.2rem;
+      }
+
+      .board {
+        flex: 1;
+        display: flex;
+        gap: 2px;
+        background: #000;
+      }
+      .p-col {
+        flex: 1;
+        background: var(--panel);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+        border-bottom: 4px solid transparent;
+        transition: 0.3s;
+      }
+      .p-col.active {
+        background: #1c2029;
+        border-bottom-color: var(--accent);
+      }
+      .p-col.bot-active {
+        border-bottom-color: var(--bot);
+      }
+
+      .p-name {
+        font-size: 1rem;
+        font-weight: 700;
+        color: var(--subtext);
+        margin-bottom: 10px;
+        text-transform: uppercase;
+      }
+      .p-score {
+        font-size: 5.5rem;
+        font-weight: 900;
+        line-height: 1;
+        margin: 0;
+      }
+      .checkout-hint {
+        height: 30px;
+        color: #00d2ff;
+        font-weight: bold;
+        font-size: 1.4rem;
+        text-shadow: 0 0 10px rgba(0, 210, 255, 0.3);
+        margin-top: 5px;
+      }
+
+      .stats-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        width: 80%;
+        gap: 10px;
+        margin-top: 20px;
+        border-top: 1px solid #333;
+        padding-top: 15px;
+      }
+      .stat span {
+        display: block;
+        font-size: 0.7rem;
+        color: #666;
+        font-weight: bold;
+      }
+      .stat b {
+        font-size: 1.1rem;
+        color: #ddd;
+      }
+
+      .overlay-msg {
+        position: absolute;
+        font-size: 2.5rem;
+        font-weight: 900;
+        transform: rotate(-10deg) scale(0.5);
+        opacity: 0;
+        transition: 0.3s;
+        pointer-events: none;
+      }
+      .overlay-msg.show {
+        transform: rotate(-10deg) scale(1);
+        opacity: 1;
+      }
+      .msg-bust {
+        color: var(--accent);
+      }
+      .msg-win {
+        color: var(--green);
+        font-size: 2rem;
+        transform: rotate(0);
+      }
+
+      /* KEYPAD */
+      .keypad {
+        background: #0a0c10;
+        padding: 10px;
+        padding-bottom: 20px;
+      }
+      .input-bar {
+        display: flex;
+        margin-bottom: 10px;
+        gap: 10px;
+      }
+      #disp {
+        flex: 1;
+        background: #161920;
+        border: none;
+        border-radius: 8px;
+        color: white;
+        font-size: 2rem;
+        text-align: center;
+        font-weight: bold;
+        padding: 5px;
+      }
+      .enter-btn {
+        width: 90px;
+        background: var(--green);
+        border: none;
+        border-radius: 8px;
+        font-weight: 900;
+        font-size: 1.2rem;
+        cursor: pointer;
+        color: #000;
+      }
+
+      .keys {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 5px;
+      }
+      .key {
+        background: #20242e;
+        border: none;
+        color: white;
+        padding: 18px 0;
+        font-size: 1.6rem;
+        border-radius: 6px;
+        font-weight: 600;
+        cursor: pointer;
+      }
+      .key:active {
+        background: #333;
+      }
+      .key-del {
+        color: var(--accent);
+      }
+      .key-undo {
+        font-size: 0.9rem;
+        color: #f1c40f;
+        text-transform: uppercase;
+      }
+
+      #win-modal {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.9);
+        z-index: 100;
+        display: none;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+      }
+      .restart-btn {
+        background: white;
+        color: black;
+        border: none;
+        padding: 15px 40px;
+        font-weight: bold;
+        border-radius: 30px;
+        cursor: pointer;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="setup">
+      <h1>USTAWIENIA GRY</h1>
+
+      <div class="config-block">
+        <label class="config-label">Punkty startowe</label>
+        <div class="input-row">
+          <input type="number" id="c-score" class="custom-input" value="501" />
+        </div>
+        <div style="margin-top: 10px; display: flex; gap: 5px">
+          <button class="preset-btn" onclick="setVal('c-score', 301)">
+            301
+          </button>
+          <button class="preset-btn" onclick="setVal('c-score', 501)">
+            501
+          </button>
+          <button class="preset-btn" onclick="setVal('c-score', 701)">
+            701
+          </button>
+          <button class="preset-btn" onclick="setVal('c-score', 170)">
+            170
+          </button>
+        </div>
+      </div>
+
+      <div class="config-block">
+        <label class="config-label">Mecz do (Liczba legów)</label>
+        <div class="input-row">
+          <input type="number" id="c-legs" class="custom-input" value="3" />
+        </div>
+        <div style="margin-top: 10px; display: flex; gap: 5px">
+          <button class="preset-btn" onclick="setVal('c-legs', 1)">BO 1</button>
+          <button class="preset-btn" onclick="setVal('c-legs', 3)">BO 3</button>
+          <button class="preset-btn" onclick="setVal('c-legs', 5)">BO 5</button>
+          <button class="preset-btn" onclick="setVal('c-legs', 11)">
+            BO 11
+          </button>
+        </div>
+      </div>
+
+      <div class="config-block">
+        <label class="config-label">Poziom Bota (AVG)</label>
+        <input
+          type="range"
+          id="c-bot"
+          min="0"
+          max="120"
+          value="0"
+          style="width: 100%; accent-color: var(--bot)"
+          oninput="updBot(this.value)"
+        />
+        <div
+          id="bot-lbl"
+          style="
+            text-align: center;
+            font-weight: bold;
+            color: #666;
+            margin-top: 5px;
+          "
+        >
+          BRAK (Gra z ziomkiem)
+        </div>
+      </div>
+
+      <button class="play-btn" onclick="startGame()">GRAJ</button>
+    </div>
+
+    <div id="game">
+      <div class="header">
+        <span>TARGET <b>CUSTOM</b></span>
+        <span class="legs-score" id="match-score">0 : 0</span>
+        <span>LEGS</span>
+      </div>
+
+      <div class="board">
+        <div id="p0" class="p-col">
+          <div class="p-name">TY</div>
+          <div class="p-score" id="s0">501</div>
+          <div class="checkout-hint" id="h0"></div>
+          <div class="stats-grid">
+            <div class="stat"><span>AVG</span><b id="avg0">0.00</b></div>
+            <div class="stat"><span>LAST</span><b id="lst0">-</b></div>
+          </div>
+          <div id="msg0" class="overlay-msg msg-bust">BUST!</div>
+        </div>
+
+        <div id="p1" class="p-col">
+          <div class="p-name" id="name1">RIVAL</div>
+          <div class="p-score" id="s1">501</div>
+          <div class="checkout-hint" id="h1"></div>
+          <div class="stats-grid">
+            <div class="stat"><span>AVG</span><b id="avg1">0.00</b></div>
+            <div class="stat"><span>LAST</span><b id="lst1">-</b></div>
+          </div>
+          <div id="msg1" class="overlay-msg msg-bust">BUST!</div>
+        </div>
+      </div>
+
+      <div class="keypad" id="keypad">
+        <div class="input-bar">
+          <input id="disp" readonly placeholder="" />
+          <button class="enter-btn" onclick="send()">OK</button>
+        </div>
+        <div class="keys">
+          <button class="key" onclick="k(1)">1</button
+          ><button class="key" onclick="k(2)">2</button
+          ><button class="key" onclick="k(3)">3</button>
+          <button class="key" onclick="k(4)">4</button
+          ><button class="key" onclick="k(5)">5</button
+          ><button class="key" onclick="k(6)">6</button>
+          <button class="key" onclick="k(7)">7</button
+          ><button class="key" onclick="k(8)">8</button
+          ><button class="key" onclick="k(9)">9</button>
+          <button class="key key-del" onclick="del()">⌫</button
+          ><button class="key" onclick="k(0)">0</button
+          ><button class="key key-undo" onclick="undo()">COFNIJ</button>
+        </div>
+      </div>
+      <div
+        id="bot-wait"
+        style="
+          display: none;
+          text-align: center;
+          padding: 20px;
+          color: #666;
+          background: #000;
+        "
+      >
+        RUCH BOTA...
+      </div>
+    </div>
+
+    <div id="win-modal">
+      <h1 style="color: var(--green); font-size: 3rem" id="w-name">WINNER!</h1>
+      <button class="restart-btn" onclick="reset()">MENU</button>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+      const socket = io();
+      const checkouts = {
+        170: "T20 T20 BULL",
+        167: "T20 T19 BULL",
+        164: "T20 T18 BULL",
+        161: "T20 T17 BULL",
+        160: "T20 T20 D20",
+        158: "T20 T20 D19",
+        157: "T20 T19 D20",
+        156: "T20 T20 D18",
+        155: "T20 T19 D19",
+        154: "T20 T18 D20",
+        153: "T20 T19 D18",
+        152: "T20 T20 D16",
+        151: "T20 T17 D20",
+        150: "T20 T18 D18",
+        149: "T20 T19 D16",
+        148: "T20 T16 D20",
+        147: "T20 T17 D18",
+        146: "T20 T18 D16",
+        145: "T20 T15 D20",
+        144: "T20 T20 D12",
+        143: "T20 T17 D16",
+        142: "T20 T14 D20",
+        141: "T20 T19 D12",
+        140: "T20 T16 D16",
+        139: "T20 T13 D20",
+        138: "T20 T18 D12",
+        137: "T19 T16 D16",
+        136: "T20 T20 D8",
+        135: "T20 T15 D15",
+        134: "T20 T14 D16",
+        133: "T20 T19 D8",
+        132: "T20 T8 BULL",
+        131: "T20 T13 D16",
+        130: "T20 T18 D8",
+        129: "T19 T20 D6",
+        128: "T18 T14 D16",
+        127: "T20 T17 D8",
+        126: "T19 T19 D6",
+        125: "BULL T20 D15",
+        124: "T20 T16 D8",
+        123: "T19 T16 D9",
+        122: "T18 T20 D4",
+        121: "T20 T11 D14",
+        120: "T20 20 D20",
+        119: "T19 T10 D16",
+        118: "T20 18 D20",
+        117: "T20 17 D20",
+        116: "T20 16 D20",
+        115: "T20 15 D20",
+        114: "T20 14 D20",
+        113: "T20 13 D20",
+        112: "T20 12 D20",
+        111: "T20 19 D16",
+        110: "T20 10 D20",
+        109: "T20 17 D16",
+        108: "T20 16 D16",
+        107: "T19 18 D16",
+        106: "T20 14 D16",
+        105: "T20 13 D16",
+        104: "T20 12 D16",
+        103: "T20 3 D20",
+        102: "T20 10 D16",
+        101: "T17 10 D20",
+        100: "T20 D20",
+        99: "T19 10 D16",
+        98: "T20 D19",
+        97: "T19 D20",
+        96: "T20 D18",
+        95: "T19 D19",
+        94: "T18 D20",
+        93: "T19 D18",
+        92: "T20 D16",
+        91: "T17 D20",
+        90: "T18 D18",
+        89: "T19 D16",
+        88: "T16 D20",
+        87: "T17 D18",
+        86: "T18 D16",
+        85: "T15 D20",
+        84: "T20 D12",
+        83: "T17 D16",
+        82: "T14 D20",
+        81: "T19 D12",
+        80: "T20 D10",
+        79: "T13 D20",
+        78: "T18 D12",
+        77: "T19 D10",
+        76: "T20 D8",
+        75: "T17 D12",
+        74: "T14 D16",
+        73: "T19 D8",
+        72: "T16 D12",
+        71: "T13 D16",
+        70: "T18 D8",
+        69: "T19 D6",
+        68: "T20 D4",
+        67: "T17 D8",
+        66: "T10 D18",
+        65: "T19 D4",
+        64: "T16 D8",
+        63: "T13 D12",
+        62: "T10 D16",
+        61: "T15 D8",
+        60: "20 D20",
+        59: "19 D20",
+        58: "18 D20",
+        57: "17 D20",
+        56: "16 D20",
+        55: "15 D20",
+        54: "14 D20",
+        53: "13 D20",
+        52: "12 D20",
+        51: "11 D20",
+        50: "10 D20",
+        49: "9 D20",
+        48: "16 D16",
+        47: "7 D20",
+        46: "6 D20",
+        45: "13 D16",
+        44: "4 D20",
+        43: "3 D20",
+        42: "10 D16",
+        41: "9 D16",
+        40: "D20",
+        39: "7 D16",
+        38: "D19",
+        37: "5 D16",
+        36: "D18",
+        35: "3 D16",
+        34: "D17",
+        33: "1 D16",
+        32: "D16",
+        31: "15 D8",
+        30: "D15",
+        29: "13 D8",
+        28: "D14",
+        27: "11 D8",
+        26: "D13",
+        25: "9 D8",
+        24: "D12",
+        23: "7 D8",
+        22: "D11",
+        21: "5 D8",
+        20: "D10",
+        19: "3 D8",
+        18: "D9",
+        17: "1 D8",
+        16: "D8",
+        15: "7 D4",
+        14: "D7",
+        13: "5 D4",
+        12: "D6",
+        11: "3 D4",
+        10: "D5",
+        9: "1 D4",
+        8: "D4",
+        7: "3 D2",
+        6: "D3",
+        5: "1 D2",
+        4: "D2",
+        3: "1 D1",
+        2: "D1",
+      };
+
+      // SETUP
+      function setVal(id, v) {
+        document.getElementById(id).value = v;
+      }
+      function updBot(v) {
+        document.getElementById("bot-lbl").innerText =
+          v == 0 ? "BRAK (Gra z ziomkiem)" : `BOT (AVG ~${v})`;
+        document.getElementById("bot-lbl").style.color =
+          v == 0 ? "#666" : "var(--bot)";
+      }
+      function startGame() {
+        socket.emit("startGame", {
+          startScore: document.getElementById("c-score").value,
+          legsToWin: document.getElementById("c-legs").value,
+          botLevel: document.getElementById("c-bot").value,
+        });
+      }
+      function reset() {
+        socket.emit("reset");
+      }
+      function undo() {
+        socket.emit("undo");
+      }
+
+      // INPUT
+      const inp = document.getElementById("disp");
+      function k(n) {
+        if (inp.value.length < 3) inp.value += n;
+      }
+      function del() {
+        inp.value = inp.value.slice(0, -1);
+      }
+      function send() {
+        if (inp.value) {
+          socket.emit("throw", inp.value);
+          inp.value = "";
+        }
+      }
+
+      // VOICE LOGIC - TERAZ CZYTA WSZYSTKO
+      socket.on("voice", (d) => {
+        let txt = "";
+        if (d.type === "score") txt = d.val.toString();
+        else if (d.type === "bust") txt = "Bust!";
+        else if (d.type === "gameshot") txt = "Game Shot!";
+
+        if (txt) {
+          const u = new SpeechSynthesisUtterance(txt);
+          u.lang = "en-GB"; // Wymuszamy brytyjski
+          u.rate = 1.1;
+          u.pitch = 0.9;
+
+          // Próba znalezienia męskiego głosu Google (jeśli jest)
+          const voices = window.speechSynthesis.getVoices();
+          const gbMale = voices.find(
+            (v) => v.lang.includes("GB") && v.name.includes("Male"),
+          );
+          if (gbMale) u.voice = gbMale;
+
+          window.speechSynthesis.speak(u);
+        }
+      });
+
+      // UPDATE UI
+      socket.on("update", (s) => {
+        const setup = document.getElementById("setup");
+        const game = document.getElementById("game");
+        const win = document.getElementById("win-modal");
+
+        if (s.status === "SETUP") {
+          setup.style.display = "flex";
+          game.style.display = "none";
+          win.style.display = "none";
+        } else if (s.status === "MATCH_FINISHED") {
+          document.getElementById("w-name").innerText = s.winner + " WINS!";
+          win.style.display = "flex";
+        } else {
+          setup.style.display = "none";
+          game.style.display = "flex";
+          win.style.display = "none";
+
+          document.getElementById("match-score").innerText =
+            `${s.legs[0]} : ${s.legs[1]}`;
+
+          s.players.forEach((p, i) => {
+            document.getElementById(`s${i}`).innerText = p.score;
+            document.getElementById(`avg${i}`).innerText = p.avg;
+            document.getElementById(`lst${i}`).innerText = p.lastScore;
+            document.getElementById("name1").innerText = s.players[1].name;
+
+            // UI active
+            const col = document.getElementById(`p${i}`);
+            const isTurn = s.turn === i;
+            col.className =
+              "p-col" + (isTurn ? (p.isBot ? " bot-active" : " active") : "");
+
+            // Hint
+            const h = checkouts[p.score];
+            document.getElementById(`h${i}`).innerText =
+              isTurn && !p.isBot && h ? h : "";
+
+            // Msg
+            const msg = document.getElementById(`msg${i}`);
+            if (p.status === "BUST") {
+              msg.innerText = "BUST!";
+              msg.className = "overlay-msg msg-bust show";
+            } else if (p.status === "GAME SHOT") {
+              msg.innerText = "GAME SHOT!";
+              msg.className = "overlay-msg msg-win show";
+            } else {
+              msg.className = "overlay-msg";
+            }
+          });
+
+          // Bot input block
+          const botTurn = s.players[s.turn].isBot;
+          document.getElementById("keypad").style.display = botTurn
+            ? "none"
+            : "block";
+          document.getElementById("bot-wait").style.display = botTurn
+            ? "block"
+            : "none";
+        }
+      });
+    </script>
+  </body>
+</html>
