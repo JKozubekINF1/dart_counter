@@ -25,7 +25,7 @@ if (fs.existsSync(DB_FILE)) {
 function saveDB() { fs.writeFileSync(DB_FILE, JSON.stringify(db, null, 2)); }
 
 let historyStack = [];
-let botTimeout = null; // Zmienna do kontroli timera bota
+let botTimeout = null;
 
 let gameState = {
   status: "SETUP",
@@ -71,15 +71,13 @@ io.on("connection", (socket) => {
   });
 
   socket.on("startGame", (cfg) => {
-    clearTimeout(botTimeout); // Reset bota
+    clearTimeout(botTimeout);
     historyStack = [];
     
     let inputLegs = parseInt(cfg.legsToWin);
     let startScore = parseInt(cfg.startScore);
-    
     if (isNaN(inputLegs) || inputLegs < 1) inputLegs = 1;
     if (isNaN(startScore) || startScore < 101) startScore = 501;
-
     const targetLegs = Math.ceil(inputLegs / 2);
 
     gameState.config = {
@@ -104,6 +102,7 @@ io.on("connection", (socket) => {
 
     gameState.status = "PLAYING";
     io.emit("update", gameState);
+    io.emit("voice", { type: "gameon" });
     checkBot();
   });
 
@@ -120,41 +119,23 @@ io.on("connection", (socket) => {
     let points = typeof data === 'object' ? parseInt(data.val) : parseInt(data);
     let doublesMissed = typeof data === 'object' ? (parseInt(data.doublesMissed) || 0) : 0;
     let finishDarts = typeof data === 'object' ? (parseInt(data.finishDarts) || 3) : 3;
-    let segment = (typeof data === 'object' && data.segment) ? data.segment : null;
+    let segments = (typeof data === 'object' && data.segments) ? data.segments : null;
 
-    handleThrow(points, doublesMissed, finishDarts, segment);
+    handleThrow(points, doublesMissed, finishDarts, segments);
   });
 
-  // --- NAPRAWIONE UNDO DLA BOTA ---
   socket.on("undo", () => {
-      clearTimeout(botTimeout); // Zatrzymaj bota jeśli myśli
-      
+      clearTimeout(botTimeout);
       if (historyStack.length > 0) {
-          // Cofnij ostatni ruch
           gameState = historyStack.pop();
-          
-          // Jeśli teraz jest tura BOTA (bo cofnęliśmy ruch gracza, a wcześniej rzucił bot),
-          // A gra jest z botem, to znaczy że user chce cofnąć SWÓJ ruch.
-          // Ale jeśli user cofa po ruchu bota, to tura jest gracza.
-          // Czekaj.
-          // Scenariusz: Gracz rzuca -> Bot rzuca -> Gracz chce cofnąć (bo np. bot rzucił za dobrze, albo gracz chce poprawić swój poprzedni).
-          // Stan obecny: Tura Gracza. Historia[-1]: Tura Bota. Historia[-2]: Tura Gracza.
-          // Pop 1: Wracamy do stanu gdzie Bot ma rzucać.
-          // Jeśli to gra z botem, musimy cofnąć JESZCZE RAZ, żeby wrócić do tury gracza.
-          
           const currentPlayer = gameState.players[gameState.turn];
           
-          // Jeśli po cofnięciu jest tura bota, cofamy jeszcze raz (żeby gracz mógł rzucać)
           if (currentPlayer.isBot && historyStack.length > 0) {
               gameState = historyStack.pop();
           }
           
           io.emit("update", gameState);
-          
-          // Jeśli po cofnięciach jest jednak tura bota (np. początek gry), uruchom go
-          if (gameState.players[gameState.turn].isBot) {
-              checkBot();
-          }
+          if (gameState.players[gameState.turn].isBot) checkBot();
       }
   });
 
@@ -176,21 +157,27 @@ function getMinDartsToFinish(score) {
     return 2;
 }
 
-function handleThrow(points, doublesMissed, finishDarts, segment) {
+function handleThrow(points, doublesMissed, finishDarts, segments) {
   if (isNaN(points) || points < 0 || points > 180) return;
 
   saveState();
   const pIdx = gameState.turn;
   const player = gameState.players[pIdx];
+  
+  // CZYSZCZENIE STATUSU PRZED RZUTEM (na wszelki wypadek)
+  player.status = ""; 
+
   const scoreBefore = player.score;
   const newScore = player.score - points;
   const dartsThrownInTurn = (newScore === 0) ? finishDarts : 3;
 
   if (points > player.matchStats.highTurn) player.matchStats.highTurn = points;
 
-  if (segment) {
-      if (!player.matchStats.heatmap[segment]) player.matchStats.heatmap[segment] = 0;
-      player.matchStats.heatmap[segment]++;
+  if (segments && Array.isArray(segments)) {
+      segments.forEach(seg => {
+          if (!player.matchStats.heatmap[seg]) player.matchStats.heatmap[seg] = 0;
+          player.matchStats.heatmap[seg]++;
+      });
   }
 
   if (gameState.legDarts[pIdx] < 9) {
@@ -204,45 +191,73 @@ function handleThrow(points, doublesMissed, finishDarts, segment) {
   gameState.legDarts[pIdx] += dartsThrownInTurn;
 
   if (newScore === 0) {
-    player.score = 0;
-    player.status = "GAME SHOT";
-    const minDarts = getMinDartsToFinish(scoreBefore);
-    let calculatedMisses = Math.max(0, finishDarts - minDarts);
-    player.matchStats.doublesHit++;
-    player.matchStats.doublesThrown += (calculatedMisses + 1);
-
-    if (points > player.matchStats.highestCheckout) player.matchStats.highestCheckout = points;
-    if (player.matchStats.bestLeg === null || gameState.legDarts[pIdx] < player.matchStats.bestLeg) {
-        player.matchStats.bestLeg = gameState.legDarts[pIdx];
+    let lastSeg = null;
+    if (segments && Array.isArray(segments) && segments.length > 0) {
+        lastSeg = segments[segments.length - 1];
     }
+    const validCheckout = lastSeg ? (lastSeg.startsWith('D') || lastSeg === 'BULL') : true;
 
-    updateStats(player, points, finishDarts, true, calculatedMisses + 1);
-    io.emit("voice", { type: "gameshot" });
-
-    gameState.legs[pIdx]++;
-    if (gameState.legs[pIdx] >= gameState.config.legsToWin) {
-      endMatch(player);
+    if (!validCheckout) {
+        // BUST (Single Out)
+        player.status = "BUST";
+        if (doublesMissed > 0) player.matchStats.doublesThrown += doublesMissed;
+        player.dartsThrown += finishDarts; 
+        recalcAvgs(player);
+        io.emit("voice", { type: "bust" });
+        
+        // ZMIANA TURY I CZYSZCZENIE STATUSU NASTĘPNEGO GRACZA
+        gameState.turn = gameState.turn === 0 ? 1 : 0;
+        gameState.players[gameState.turn].status = ""; 
     } else {
-      gameState.starter = gameState.starter === 0 ? 1 : 0;
-      setTimeout(() => {
-        initLeg(gameState.config.startScore, gameState.starter);
-        io.emit("update", gameState);
-        checkBot();
-      }, 3000);
+        // VALID CHECKOUT
+        player.score = 0;
+        player.status = "GAME SHOT";
+        const minDarts = getMinDartsToFinish(scoreBefore);
+        let calculatedMisses = Math.max(0, finishDarts - minDarts);
+        player.matchStats.doublesHit++;
+        player.matchStats.doublesThrown += (calculatedMisses + 1);
+
+        if (points > player.matchStats.highestCheckout) player.matchStats.highestCheckout = points;
+        if (player.matchStats.bestLeg === null || gameState.legDarts[pIdx] < player.matchStats.bestLeg) {
+            player.matchStats.bestLeg = gameState.legDarts[pIdx];
+        }
+
+        updateStats(player, points, finishDarts, true, calculatedMisses + 1);
+        io.emit("voice", { type: "gameshot" });
+
+        gameState.legs[pIdx]++;
+        if (gameState.legs[pIdx] >= gameState.config.legsToWin) {
+            endMatch(player);
+        } else {
+            gameState.starter = gameState.starter === 0 ? 1 : 0;
+            setTimeout(() => {
+                initLeg(gameState.config.startScore, gameState.starter);
+                io.emit("update", gameState);
+                checkBot();
+            }, 3000);
+        }
     }
   } else if (newScore <= 1) {
+    // BUST (Score too high)
     player.status = "BUST";
     if (doublesMissed > 0) player.matchStats.doublesThrown += doublesMissed;
     player.dartsThrown += 3;
     recalcAvgs(player);
     io.emit("voice", { type: "bust" });
+    
+    // ZMIANA TURY I CZYSZCZENIE STATUSU NASTĘPNEGO GRACZA
     gameState.turn = gameState.turn === 0 ? 1 : 0;
+    gameState.players[gameState.turn].status = ""; 
   } else {
+    // NORMAL SCORE
     player.score = newScore;
     if (doublesMissed > 0) player.matchStats.doublesThrown += doublesMissed;
     updateStats(player, points, 3, false, doublesMissed);
     io.emit("voice", { type: "score", val: points });
+    
+    // ZMIANA TURY I CZYSZCZENIE STATUSU NASTĘPNEGO GRACZA
     gameState.turn = gameState.turn === 0 ? 1 : 0;
+    gameState.players[gameState.turn].status = ""; 
   }
 
   if (gameState.status === "PLAYING") {
@@ -261,7 +276,6 @@ function endMatch(winner) {
   clearTimeout(botTimeout);
   gameState.status = "MATCH_FINISHED";
   gameState.winner = winner.name;
-  
   const record = {
     id: Date.now(),
     date: Date.now(),
@@ -418,4 +432,4 @@ function calculateUserStats(userId) {
   };
 }
 
-server.listen(3100, "0.0.0.0", () => console.log("Dart PRO Ultimate 3.5 Server 3100"));
+server.listen(3100, "0.0.0.0", () => console.log("Dart PRO Ultimate 3.9 Server 3100"));

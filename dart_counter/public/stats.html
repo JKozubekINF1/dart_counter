@@ -26,7 +26,6 @@
         .main-content { flex: 1; padding: 30px; overflow-y: auto; display: flex; flex-direction: column; gap: 20px; position:relative; }
         .top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; position: relative; z-index: 10; }
         
-        /* DROPDOWN USER SWITCH */
         .user-switch-container { position: relative; }
         .user-title { font-size: 2.2rem; font-weight: 900; text-transform: uppercase; margin: 0; cursor: pointer; display: flex; align-items: center; gap: 10px; }
         .user-title::after { content: '▼'; font-size: 1rem; color: var(--text-sub); }
@@ -79,8 +78,7 @@
         <div class="top-bar">
             <div class="user-switch-container">
                 <h1 class="user-title" id="u-name" onclick="toggleDropdown()">...</h1>
-                <div id="user-dropdown" class="user-dropdown">
-                    </div>
+                <div id="user-dropdown" class="user-dropdown"></div>
             </div>
             <a href="/" class="back-btn">← WRÓĆ DO GRY</a>
         </div>
@@ -121,7 +119,6 @@
             socket.emit('init_stats_page', currentUserId);
         });
 
-        // POPULATE DROPDOWN
         socket.on('users_list', (users) => {
             const drop = document.getElementById('user-dropdown');
             drop.innerHTML = "";
@@ -129,9 +126,7 @@
                 const div = document.createElement('div');
                 div.className = 'ud-item';
                 div.innerText = u.name;
-                div.onclick = () => {
-                    window.location.href = `/stats?user=${u.id}`;
-                };
+                div.onclick = () => { window.location.href = `/stats?user=${u.id}`; };
                 drop.appendChild(div);
             });
         });
@@ -141,13 +136,10 @@
             d.classList.toggle('show');
         }
 
-        // CLOSE DROPDOWN WHEN CLICKING OUTSIDE
         window.onclick = function(event) {
             if (!event.target.matches('.user-title')) {
                 const d = document.getElementById('user-dropdown');
-                if (d && d.classList.contains('show')) {
-                    d.classList.remove('show');
-                }
+                if (d && d.classList.contains('show')) d.classList.remove('show');
             }
         }
 

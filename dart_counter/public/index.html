@@ -36,18 +36,19 @@
       .vt-btn { background: transparent; border: none; padding: 8px 15px; cursor: pointer; font-size: 1.2rem; color: #555; transition: 0.2s; }
       .vt-btn.active { background: var(--text-main); color: #000; }
       .legs-score { color: white; font-size: 1.5rem; font-weight: 900; letter-spacing: 2px; }
-      .abort-btn { background: #2a2a2e; color: var(--red-pastel); border: 1px solid var(--border); width: 40px; height: 40px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 1.2rem; display: flex; align-items: center; justify-content: center; }
+      .abort-btn { background: transparent; color: #444; border: none; font-size: 1.5rem; cursor: pointer; font-weight: bold; transition:0.2s; }
+      .abort-btn:hover { color: var(--red-pastel); }
 
       .game-content { flex: 1; display: flex; overflow: hidden; }
 
       /* LAYOUTS */
-      /* KEYPAD: Column, Scores top, Input bottom */
+      /* KEYPAD: Scores 55% / Input 45% */
       #game.layout-keypad .game-content { flex-direction: column; }
-      #game.layout-keypad .scores-section { flex-direction: row; height: 40%; width: 100%; border-bottom: 1px solid var(--border); border-right: none; }
+      #game.layout-keypad .scores-section { flex-direction: row; height: 55%; width: 100%; border-bottom: 1px solid var(--border); border-right: none; }
       #game.layout-keypad .player-card { border-bottom: none; border-right: 1px solid var(--border); }
-      #game.layout-keypad .input-section { height: 60%; width: 100%; }
+      #game.layout-keypad .input-section { height: 45%; width: 100%; }
 
-      /* BOARD: Row, Scores left, Input right */
+      /* BOARD: Scores 45% / Input 55% */
       #game.layout-board .game-content { flex-direction: row; }
       #game.layout-board .scores-section { flex-direction: column; width: 45%; height: 100%; border-right: 1px solid var(--border); border-bottom: none; }
       #game.layout-board .player-card { border-right: none; border-bottom: 1px solid var(--border); }
@@ -56,7 +57,6 @@
       .scores-section { display: flex; background: #0a0a0c; }
       .input-section { display: flex; flex-direction: column; background: var(--bg-panel); position: relative; }
 
-      /* PLAYERS */
       .player-card { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; padding: 10px; transition: 0.3s; }
       .player-card#p0 { background: radial-gradient(circle at top left, #1a251b 0%, #0a0a0c 70%); }
       .player-card#p0.active { background: radial-gradient(circle at top left, #2e4a31 0%, #0a0a0c 100%); }
@@ -65,7 +65,6 @@
       .player-card#p1.active { background: radial-gradient(circle at bottom left, #5c2b2b 0%, #0a0a0c 100%); }
       .player-card#p1 .p-score { color: var(--red-pastel); }
 
-      /* Active Border Logic */
       #game.layout-keypad .player-card#p0.active { border-bottom: 4px solid var(--green-pastel); }
       #game.layout-keypad .player-card#p1.active { border-bottom: 4px solid var(--red-pastel); }
       #game.layout-board .player-card#p0.active { border-right: 4px solid var(--green-pastel); }
@@ -100,31 +99,30 @@
 
       /* DARTBOARD UI */
       #dartboard-ui { flex: 1; display: none; flex-direction: column; align-items: center; padding: 10px; height: 100%; overflow: hidden; }
-      
       .slots-container { display: flex; gap: 10px; margin-bottom: 5px; width: 100%; justify-content: center; height: 50px; }
       .slot { width: 60px; height: 45px; background: #111; border: 1px solid #333; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #555; font-size: 1.2rem; font-weight: 900; }
       .slot.filled { border-color: var(--accent); color: white; background: #222; box-shadow: 0 0 10px rgba(100,181,246,0.1); }
 
-      .board-center-row { flex: 1; width: 100%; display: flex; align-items: center; justify-content: center; gap: 10px; overflow: hidden; }
+      .board-center-row { flex: 1; width: 100%; display: flex; align-items: center; justify-content: center; gap: 5px; overflow: hidden; }
       .board-svg-container { flex: 1; height: 100%; display: flex; justify-content: center; align-items: center; position: relative; }
       svg { height: 98%; width: auto; max-width: 100%; filter: drop-shadow(0 5px 20px rgba(0,0,0,0.5)); touch-action: manipulation; }
       path:hover { opacity: 0.8; }
       path:active, circle:active { fill: white !important; }
 
       .miss-vertical {
-          width: 50px; height: 60%; max-height: 300px; border-radius: 25px; 
+          width: 40px; height: 60%; max-height: 250px; border-radius: 20px; 
           background: #2b1e1e; border: 2px solid var(--red-pastel); color: var(--red-pastel);
-          font-weight: 900; font-size: 1rem; cursor: pointer; letter-spacing: 3px;
+          font-weight: 900; font-size: 0.9rem; cursor: pointer; letter-spacing: 2px;
           writing-mode: vertical-rl; text-orientation: upright; display: flex; align-items: center; justify-content: center;
-          transition: 0.1s; box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+          transition: 0.1s; box-shadow: 0 4px 10px rgba(0,0,0,0.3); margin-left: 5px;
       }
       .miss-vertical:active { background: var(--red-pastel); color: black; transform: scale(0.95); }
 
       .board-actions { display: flex; gap: 10px; width: 100%; max-width: 400px; margin-top: 5px; height: 55px; }
       .act-btn { flex: 1; border-radius: 12px; border: none; font-weight: bold; cursor: pointer; font-size: 1rem; color: black; transition: 0.1s; }
       .act-btn:active { transform: scale(0.98); }
-      .btn-undo { background: #222; color: #888; border: 1px solid #333; } /* Local undo dart */
-      .btn-undo-turn { background: #332b00; color: var(--gold); border: 1px solid var(--gold); } /* Global undo turn */
+      .btn-undo { background: #222; color: #888; border: 1px solid #333; }
+      .btn-undo-turn { background: #332b00; color: var(--gold); border: 1px solid var(--gold); }
       .btn-ok { background: var(--green-pastel); }
 
       /* OVERLAYS */
@@ -151,7 +149,7 @@
           .layout-board .input-section { width: 100%; height: 75%; }
           .p-score { font-size: 3rem; }
           .board-center-row { flex-direction: column; }
-          .miss-vertical { width: 100%; height: 50px; writing-mode: horizontal-tb; text-orientation: mixed; margin-bottom: 10px; }
+          .miss-vertical { width: 100%; height: 50px; writing-mode: horizontal-tb; text-orientation: mixed; margin-bottom: 10px; margin-left: 0; }
           svg { height: 90%; }
       }
     </style>
@@ -220,7 +218,7 @@
                         <button class="key-btn" onclick="k(4)">4</button><button class="key-btn" onclick="k(5)">5</button><button class="key-btn" onclick="k(6)">6</button>
                         <button class="key-btn" onclick="k(7)">7</button><button class="key-btn" onclick="k(8)">8</button><button class="key-btn" onclick="k(9)">9</button>
                         <button class="key-btn k-del" onclick="del()">⌫</button><button class="key-btn" onclick="k(0)">0</button><button class="key-btn k-ok" onclick="preSend()">OK</button>
-                        <button class="key-btn k-back" onclick="undo()" style="grid-column: span 3">COFNIJ RUCH</button>
+                        <button class="key-btn k-back" onclick="askUndo()" style="grid-column: span 3">COFNIJ RUCH</button>
                     </div>
                 </div>
 
@@ -238,7 +236,7 @@
                     </div>
 
                     <div class="board-actions">
-                        <button class="act-btn btn-undo-turn" onclick="undo()">COFNIJ TURĘ</button>
+                        <button class="act-btn btn-undo-turn" onclick="askUndo()">COFNIJ TURĘ</button>
                         <button class="act-btn btn-undo" onclick="undoDart()">COFNIJ LOTKĘ</button>
                         <button class="act-btn btn-ok" onclick="submitDarts()">ZATWIERDŹ</button>
                     </div>
@@ -248,6 +246,16 @@
                     <div class="bot-spinner"></div>
                     <h3 style="color:white; margin-top:20px; letter-spacing:2px">BOT THINKING...</h3>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="undo-modal" class="modal-bg">
+        <div class="modal-content">
+            <h2 style="color:white; margin-bottom:20px">CZY COFNĄĆ TURĘ?</h2>
+            <div class="m-opts">
+                <button class="m-btn" onclick="closeUndoModal()">NIE</button>
+                <button class="m-btn acc" onclick="confirmUndo()">TAK</button>
             </div>
         </div>
     </div>
@@ -307,7 +315,7 @@
           svg.style.width = "100%"; svg.style.height = "100%";
 
           const nums = [20,1,18,4,13,6,10,15,2,17,3,19,7,16,8,11,14,9,12,5];
-          const r = [0, 6.35, 15.9, 99, 109, 162, 170]; 
+          const radii = [0, 6.35, 15.9, 99, 109, 162, 170]; 
 
           for(let i=0; i<20; i++) {
               const a1 = (i*18 - 9) * Math.PI/180;
@@ -363,7 +371,12 @@
           updateSlots();
           const sum = dartBuffer.reduce((a,b)=>a+b.s,0);
           const rem = myScore - sum;
-          if(rem <= 1) submitDarts(); 
+          // IMPORTANT: Fixed missing brace in prev version? No, logic was just limited.
+          // Now just update UI, user must click submit or handle 0 logic in buffer
+          if(rem < 0 || rem === 1) {
+              // Bust logic handled in submitDarts
+              // Just visual update is fine, user clicks submit
+          }
       }
 
       function undoDart() {
@@ -387,22 +400,25 @@
           if(dartBuffer.length===0) return;
           const total = dartBuffer.reduce((a,b)=>a+b.s,0);
           const last = dartBuffer[dartBuffer.length-1];
-          const seg = last.id;
+          const seg = last.id; // Send only last segment for finish check logic
+          
+          // MAP ALL SEGMENTS FOR HEATMAP
+          const allSegments = dartBuffer.map(d => d.id);
+
           const rem = myScore - total;
           
           const savedBuffer = [...dartBuffer];
           dartBuffer = []; updateSlots();
 
           if(rem === 0) {
-              const m = document.getElementById('checkout-modal');
-              const t = document.getElementById('cm-title');
-              const o = document.getElementById('cm-opts');
-              o.innerHTML=""; m.style.display="flex"; t.innerText="KTÓRĄ LOTKĄ?";
-              [1,2,3].forEach(n=>{
-                  const b = document.createElement('button'); b.className="m-btn acc"; b.innerText=n;
-                  b.onclick=()=>{ m.style.display="none"; send(total, n-1, n, seg); };
-                  o.appendChild(b);
-              });
+              const isDouble = seg.startsWith('D') || seg === 'BULL';
+              if(isDouble) {
+                  // Direct finish, no modal needed for board as we know count
+                  send(total, 0, savedBuffer.length, allSegments);
+              } else {
+                  // Bust (Single out)
+                  send(total, 0, 3, allSegments);
+              }
               return;
           }
 
@@ -410,20 +426,21 @@
           const bogeyNumbers = [169, 168, 166, 165, 163, 162, 159];
           const isCheckoutRange = (myScore <= 170 && !bogeyNumbers.includes(myScore));
           
-          if (isCheckoutRange) { 
+          // Only ask if rem > 1 (not bust) and was in checkout range
+          if (isCheckoutRange && rem > 1) { 
               const m = document.getElementById('checkout-modal');
               const t = document.getElementById('cm-title');
               const o = document.getElementById('cm-opts');
               o.innerHTML=""; m.style.display="flex"; t.innerText="PUDŁA NA DUBLU?";
               [0,1,2,3].forEach(n=>{
                   const b = document.createElement('button'); b.className="m-btn"; b.innerText=n;
-                  b.onclick=()=>{ m.style.display="none"; send(total, n, 3, seg); }; // Using last segment as key
+                  b.onclick=()=>{ m.style.display="none"; send(total, n, 3, allSegments); }; 
                   o.appendChild(b);
               });
               return;
           }
           
-          send(total, 0, 3, seg);
+          send(total, 0, 3, allSegments);
       }
 
       const inp = document.getElementById("disp");
@@ -465,8 +482,8 @@
           send(tempVal, 0, 3, null);
       }
 
-      function send(val, misses, darts, seg) {
-          socket.emit("throw", { val, doublesMissed: misses, finishDarts: darts, segment: seg });
+      function send(val, misses, darts, segs) {
+          socket.emit("throw", { val, doublesMissed: misses, finishDarts: darts, segments: segs });
           inp.value = "";
       }
 
@@ -485,7 +502,12 @@
       }
       function abortGame() { if(confirm("Przerwać?")) socket.emit("abort_game"); }
       function reset() { document.getElementById("match-details-overlay").style.display="none"; socket.emit("reset"); }
-      function undo() { socket.emit("undo"); }
+      
+      function askUndo() { document.getElementById('undo-modal').style.display = 'flex'; }
+      function closeUndoModal() { document.getElementById('undo-modal').style.display = 'none'; }
+      function confirmUndo() { socket.emit("undo"); closeUndoModal(); }
+      function undo() { askUndo(); }
+
       function goToStats(uid) { if(!uid || uid==="BOT") return alert("Wybierz gracza"); window.location.href=`/stats?user=${uid}`; }
 
       socket.on("users_list", (u) => {
@@ -534,7 +556,9 @@
           } else {
               setup.style.display="none"; game.style.display="flex";
               document.getElementById("match-score").innerText = `${s.legs[0]} : ${s.legs[1]}`;
-              myScore = s.players[0].score;
+              
+              // FIX: Update myScore based on CURRENT turn, not just player 0
+              myScore = s.players[s.turn].score;
               
               s.players.forEach((p, i) => {
                   document.getElementById(`name${i}`).innerText = p.name;
@@ -575,9 +599,38 @@
       });
 
       socket.on("voice", (d) => {
-          let t=""; if(d.type==="score")t=d.val; if(d.type==="bust")t="Bust"; if(d.type==="gameshot")t="Game Shot";
-          if(t) { const u=new SpeechSynthesisUtterance(t.toString()); u.lang="en-GB"; u.rate=1.1; window.speechSynthesis.speak(u); }
+        const soundPath = "/sounds/";
+        let audioFile = null;
+        let textToSpeak = "";
+
+        if (d.type === "gameon") audioFile = "gameon.wav";
+        else if (d.type === "score") {
+            const val = d.val;
+            if (val >= 0 && val <= 120) audioFile = val + ".wav"; 
+            else if (val === 180 || val === 140 || val > 120) audioFile = val + ".wav";
+            textToSpeak = val.toString();
+        }
+        else if (d.type === "bust") textToSpeak = "Bust";
+        else if (d.type === "gameshot") textToSpeak = "Game Shot";
+
+        if (audioFile) {
+            const audio = new Audio(soundPath + audioFile);
+            audio.play().catch(err => { if (textToSpeak) speak(textToSpeak); });
+        } else if (textToSpeak) {
+            speak(textToSpeak);
+        }
       });
+
+      function speak(txt) {
+          if (!txt) return;
+          const u = new SpeechSynthesisUtterance(txt);
+          u.lang = "en-GB"; u.rate = 1.1;
+          const voices = window.speechSynthesis.getVoices();
+          const gbMale = voices.find((v) => v.lang.includes("GB") && v.name.includes("Male")) || 
+                         voices.find((v) => v.lang.includes("GB"));
+          if (gbMale) u.voice = gbMale;
+          window.speechSynthesis.speak(u);
+      }
     </script>
   </body>
 </html>
