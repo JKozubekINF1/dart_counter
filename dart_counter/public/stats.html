@@ -29,10 +29,7 @@
         .user-switch-container { position: relative; }
         .user-title { font-size: 2.2rem; font-weight: 900; text-transform: uppercase; margin: 0; cursor: pointer; display: flex; align-items: center; gap: 10px; }
         .user-title::after { content: '▼'; font-size: 1rem; color: var(--text-sub); }
-        .user-dropdown { 
-            position: absolute; top: 100%; left: 0; background: var(--panel); border: 1px solid #333; 
-            border-radius: 12px; padding: 10px; min-width: 200px; display: none; box-shadow: 0 10px 30px rgba(0,0,0,0.5); 
-        }
+        .user-dropdown { position: absolute; top: 100%; left: 0; background: var(--panel); border: 1px solid #333; border-radius: 12px; padding: 10px; min-width: 200px; display: none; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
         .user-dropdown.show { display: flex; flex-direction: column; }
         .ud-item { padding: 10px; cursor: pointer; color: #aaa; font-weight: bold; border-radius: 6px; transition: 0.2s; }
         .ud-item:hover { background: #333; color: white; }
@@ -40,30 +37,37 @@
         .back-btn { background: #333; color: white; padding: 10px 20px; border-radius: 50px; text-decoration: none; font-weight: bold; transition: 0.2s; }
         .back-btn:hover { background: var(--accent); }
 
+        .filter-bar { display: flex; gap: 10px; margin-bottom: 15px; }
+        .filter-btn { background: #111; border: 1px solid #333; color: #888; padding: 10px 20px; border-radius: 30px; cursor: pointer; font-weight: bold; transition: 0.2s; font-size: 0.8rem; text-transform: uppercase; }
+        .filter-btn.active { background: var(--text); color: black; border-color: var(--text); }
+        .filter-btn:hover { color: white; border-color: white; }
+
         .kpi-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 15px; }
         .card { background: var(--panel); padding: 15px; border-radius: 12px; border: 1px solid #2a2a2e; position: relative; overflow: hidden; }
         .card h3 { margin: 0; font-size: 0.6rem; color: var(--text-sub); text-transform: uppercase; letter-spacing: 1px; }
         .card .value { font-size: 1.5rem; font-weight: 900; margin-top: 5px; color: white; }
         .card .sub { font-size: 0.7rem; color: #666; margin-top: 2px; }
-        .c-avg .value { color: var(--accent); } .c-f9 .value { color: var(--blue); }
-        .c-co .value { color: var(--green); } .c-win .value { color: var(--purple); }
-        .c-best .value { color: var(--gold); } .c-hi .value { color: white; } .c-turn .value { color: #e91e63; }
+        
+        .c-avg .value { color: var(--accent); } 
+        .c-f9 .value { color: var(--blue); }
+        .c-co .value { color: var(--green); } 
+        .c-win .value { color: var(--purple); }
+        .c-best .value { color: var(--gold); }
+        
+        /* SINGLE MATCH SPECIFIC STYLES */
+        .single-match-result { grid-column: span 1; background: #222; border-color: #444; }
+        .result-text { font-size: 1.2rem; font-weight: 900; }
+        .res-w { color: var(--green); } .res-l { color: var(--accent); }
+        
+        .vs-stat { font-size: 0.6em; color: #888; font-weight: 400; display: block; margin-top: 5px; }
 
         .charts-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; min-height: 350px; }
         .chart-card { background: var(--panel); padding: 20px; border-radius: 16px; border: 1px solid #2a2a2e; display: flex; flex-direction: column; align-items: center; justify-content: center; }
         .chart-title { font-size: 1rem; font-weight: bold; margin-bottom: 15px; color: var(--text-sub); width:100%; text-align:left; }
         .canvas-container { flex: 1; position: relative; width: 100%; }
         
-        #heatmap-container { width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; }
-
-        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 100; display: none; align-items: center; justify-content: center; backdrop-filter: blur(5px); }
-        .modal-box { background: var(--panel); width: 90%; max-width: 500px; padding: 30px; border-radius: 16px; border: 1px solid #333; box-shadow: 0 20px 50px rgba(0,0,0,0.5); }
-        .m-title { text-align: center; font-size: 1.5rem; font-weight: 900; margin-bottom: 5px; color:white; }
-        .m-sub { text-align: center; color: #888; font-size: 0.9rem; margin-bottom: 20px; border-bottom: 1px solid #333; padding-bottom: 15px; }
-        .stats-table { width: 100%; border-collapse: collapse; }
-        .stats-table th { color: var(--text-sub); font-size: 0.7rem; padding-bottom: 10px; border-bottom: 1px solid #333; }
-        .stats-table td { color: white; text-align: center; padding: 12px 0; border-bottom: 1px solid #222; font-weight: 600; font-size: 1.1rem; }
-        .m-close { width: 100%; padding: 15px; background: var(--accent); border: none; font-weight: bold; font-size: 1rem; border-radius: 8px; margin-top: 20px; cursor: pointer; }
+        #heatmap-container { width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; position: relative; }
+        #heatmap-tooltip { position: absolute; background: rgba(0,0,0,0.9); border: 1px solid #444; padding: 10px; border-radius: 6px; font-size: 0.8rem; color: white; display: none; pointer-events: none; z-index: 1000; box-shadow: 0 4px 10px rgba(0,0,0,0.5); transform: translate(15px, 15px); }
 
         @media (max-width: 1200px) {
             body { flex-direction: column; overflow: auto; }
@@ -74,6 +78,7 @@
     </style>
 </head>
 <body>
+    <div id="heatmap-tooltip"></div>
     <div class="main-content">
         <div class="top-bar">
             <div class="user-switch-container">
@@ -82,115 +87,175 @@
             </div>
             <a href="/" class="back-btn">← WRÓĆ DO GRY</a>
         </div>
-        <div class="kpi-grid">
-            <div class="card c-avg"><h3>Średnia</h3><div class="value" id="k-avg">0.00</div><div class="sub">Ogólna</div></div>
-            <div class="card c-f9"><h3>First 9</h3><div class="value" id="k-f9">0.00</div><div class="sub">Start</div></div>
-            <div class="card c-co"><h3>Checkout</h3><div class="value" id="k-co">0%</div><div class="sub">Skuteczność</div></div>
-            <div class="card c-best"><h3>Best Leg</h3><div class="value" id="k-best">-</div><div class="sub">Lotki</div></div>
-            <div class="card c-hi"><h3>Hi-Check</h3><div class="value" id="k-hi">0</div><div class="sub">Zamek</div></div>
-            <div class="card c-turn"><h3>Hi-Turn</h3><div class="value" id="k-turn">0</div><div class="sub">Wynik</div></div>
-            <div class="card c-win"><h3>Win Rate</h3><div class="value" id="k-win">0%</div><div class="sub" id="k-games">Mecze: 0</div></div>
+
+        <div class="filter-bar">
+            <button class="filter-btn active" onclick="setFilter('all', this)">ALL TIME</button>
+            <button class="filter-btn" onclick="setFilter('month', this)">MIESIĄC</button>
+            <button class="filter-btn" onclick="setFilter('week', this)">TYDZIEŃ</button>
+            <button class="filter-btn" onclick="setFilter('today', this)">DZIŚ</button>
         </div>
+
+        <div class="kpi-grid" id="kpi-container">
+            </div>
+
         <div class="charts-row">
-            <div class="chart-card"><div class="chart-title">HEATMAPA (Tylko tryb tarczy)</div><div id="heatmap-container"></div></div>
-            <div class="chart-card"><div class="chart-title">FORMA (Ostatnie 20 meczy)</div><div class="canvas-container"><canvas id="trendChart"></canvas></div></div>
+            <div class="chart-card"><div class="chart-title" id="trend-title">FORMA (AVG)</div><div class="canvas-container"><canvas id="trendChart"></canvas></div></div>
             <div class="chart-card"><div class="chart-title">SCORING (Rozkład rzutów)</div><div class="canvas-container"><canvas id="distChart"></canvas></div></div>
+            <div class="chart-card"><div class="chart-title">HEATMAPA (Tylko tryb tarczy)</div><div id="heatmap-container"></div></div>
         </div>
     </div>
+    
     <div class="history-panel">
-        <div class="h-header">HISTORIA</div>
+        <div class="h-header">HISTORIA (Kliknij, aby zobaczyć)</div>
         <div class="h-list" id="h-list"></div>
     </div>
-    <div id="match-modal" class="modal-overlay" onclick="if(event.target.id==='match-modal')this.style.display='none'">
-        <div class="modal-box">
-            <div class="m-title">RAPORT MECZOWY</div>
-            <div class="m-sub" id="m-sub">...</div>
-            <table class="stats-table"><thead><tr><th>STATYSTYKA</th><th id="m-p1">JA</th><th id="m-p2">RYWAL</th></tr></thead><tbody id="m-body"></tbody></table>
-            <button class="m-close" onclick="document.getElementById('match-modal').style.display='none'">ZAMKNIJ</button>
-        </div>
-    </div>
+
     <script src="/socket.io/socket.io.js"></script>
     <script>
         const socket = io();
         let currentUserId = new URLSearchParams(window.location.search).get('user');
+        let activeFilter = 'all';
+
         if (!currentUserId) window.location.href = "/";
         
-        socket.on('connect', () => {
-            socket.emit('init_stats_page', currentUserId);
-        });
+        socket.on('connect', () => { fetchStats(); });
+
+        function fetchStats() { socket.emit('get_stats', { userId: currentUserId, filter: activeFilter }); }
+
+        function setFilter(f, btn) {
+            activeFilter = f;
+            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+            if(btn) btn.classList.add('active');
+            fetchStats();
+        }
+
+        function loadMatch(matchId) {
+            activeFilter = matchId;
+            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+            fetchStats();
+        }
 
         socket.on('users_list', (users) => {
             const drop = document.getElementById('user-dropdown');
             drop.innerHTML = "";
             users.forEach(u => {
                 const div = document.createElement('div');
-                div.className = 'ud-item';
-                div.innerText = u.name;
+                div.className = 'ud-item'; div.innerText = u.name;
                 div.onclick = () => { window.location.href = `/stats?user=${u.id}`; };
                 drop.appendChild(div);
             });
         });
 
-        function toggleDropdown() {
-            const d = document.getElementById('user-dropdown');
-            d.classList.toggle('show');
-        }
-
-        window.onclick = function(event) {
-            if (!event.target.matches('.user-title')) {
-                const d = document.getElementById('user-dropdown');
-                if (d && d.classList.contains('show')) d.classList.remove('show');
-            }
-        }
+        function toggleDropdown() { document.getElementById('user-dropdown').classList.toggle('show'); }
+        window.onclick = function(event) { if (!event.target.matches('.user-title')) document.getElementById('user-dropdown').classList.remove('show'); }
 
         socket.on('full_stats_data', (data) => {
             if (!data.user) return;
             document.getElementById('u-name').innerText = data.user;
-            document.getElementById('k-avg').innerText = data.summary.avg;
-            document.getElementById('k-f9').innerText = data.summary.first9;
-            document.getElementById('k-co').innerText = data.summary.coPct + "%";
-            document.getElementById('k-win').innerText = data.summary.winRate + "%";
-            document.getElementById('k-best').innerText = data.summary.bestLeg;
-            document.getElementById('k-hi').innerText = data.summary.hiOut;
-            document.getElementById('k-turn').innerText = data.summary.hiTurn;
-            document.getElementById('k-games').innerText = `W: ${data.summary.wins} / L: ${data.summary.games - data.summary.wins}`;
-            const hList = document.getElementById('h-list'); hList.innerHTML = "";
+            
+            // DYNAMIC KPI GRID RENDER
+            const kpi = document.getElementById('kpi-container');
+            kpi.innerHTML = ""; // Clear existing
+
+            if (data.isSingleMatch) {
+                // SINGLE MATCH VIEW (With Opponent Comparison)
+                const resClass = data.summary.matchResult === "ZWYCIĘSTWO" ? "res-w" : "res-l";
+                kpi.innerHTML = `
+                    <div class="card single-match-result"><div class="result-text ${resClass}">${data.summary.matchResult}</div><div class="sub">Wynik Meczu</div></div>
+                    
+                    <div class="card c-avg">
+                        <h3>Średnia</h3>
+                        <div class="value">${data.summary.avg}<span class="vs-stat">vs ${data.summary.opponentAvg}</span></div>
+                        <div class="sub">Ty vs Rywal</div>
+                    </div>
+
+                    <div class="card c-win">
+                        <h3>Scoring Avg</h3>
+                        <div class="value">${data.summary.scoringAvg}<span class="vs-stat">vs ${data.summary.opponentScoring}</span></div>
+                        <div class="sub">Ty vs Rywal</div>
+                    </div>
+
+                    <div class="card c-f9"><h3>First 9</h3><div class="value">${data.summary.first9}</div><div class="sub">Start</div></div>
+                    <div class="card c-co"><h3>Checkout</h3><div class="value">${data.summary.coPct}</div><div class="sub">Skuteczność</div></div>
+                    <div class="card c-hi"><h3>180s / 140s / 100s</h3><div class="value" style="font-size:1.2rem">${data.summary.total180} / ${data.summary.total140} / ${data.summary.total100}</div><div class="sub">Licznik</div></div>
+                    <div class="card c-best"><h3>Najlepszy Turn</h3><div class="value">${data.summary.hiTurn}</div><div class="sub">Max Score</div></div>
+                `;
+            } else {
+                // OVERVIEW VIEW (Combined Stats)
+                kpi.innerHTML = `
+                    <div class="card c-avg"><h3>Średnia</h3><div class="value">${data.summary.avg}</div><div class="sub">Ogólna</div></div>
+                    <div class="card c-f9"><h3>First 9</h3><div class="value">${data.summary.first9}</div><div class="sub">Start</div></div>
+                    <div class="card c-co"><h3>Checkout</h3><div class="value">${data.summary.coPct}%</div><div class="sub">Skuteczność</div></div>
+                    <div class="card c-best"><h3>Best Leg</h3><div class="value">${data.summary.bestLeg}</div><div class="sub">Lotki</div></div>
+                    <div class="card c-hi"><h3>Hi-Check</h3><div class="value">${data.summary.hiOut}</div><div class="sub">Zamek</div></div>
+                    <div class="card c-turn"><h3>Hi-Turn</h3><div class="value">${data.summary.hiTurn}</div><div class="sub">Wynik</div></div>
+                    <div class="card c-win"><h3>Win Rate</h3><div class="value">${data.summary.winRate}%</div><div class="sub">Mecze: ${data.summary.games}</div></div>
+                `;
+            }
+
+            if(data.charts.title) document.getElementById('trend-title').innerText = data.charts.title;
+
+            const hList = document.getElementById('h-list'); 
+            hList.innerHTML = "";
             data.history.forEach(m => {
                 const div = document.createElement('div'); div.className = 'h-item';
-                div.onclick = () => socket.emit('get_match_details', m.id);
+                div.onclick = () => loadMatch(m.id);
                 div.innerHTML = `<div class="h-res ${m.result==='W'?'win':'loss'}">${m.result}</div><div class="h-details"><div style="font-weight:bold;color:#ddd">vs ${m.rival}</div><div>${new Date(m.date).toLocaleDateString()} | ${m.score}</div></div><div class="h-avg">AVG ${m.avg}</div>`;
                 hList.appendChild(div);
             });
             renderTrendChart(data.charts); renderDistChart(data.distribution);
             renderHeatmap(data.heatmap);
         });
-        socket.on('history_match_details', (m) => {
-            const p1 = m.players[0]; const p2 = m.players[1];
-            document.getElementById('m-sub').innerText = `${new Date(m.date).toLocaleString()} | Wynik: ${m.scoreStr}`;
-            document.getElementById('m-p1').innerText = p1.name; document.getElementById('m-p2').innerText = p2.name;
-            const pct = (s) => s.doublesThrown===0 ? "0%" : ((s.doublesHit/s.doublesThrown)*100).toFixed(1)+"%";
-            document.getElementById('m-body').innerHTML = `
-                <tr><td>ŚREDNIA</td><td>${p1.avg}</td><td>${p2.avg}</td></tr>
-                <tr><td>FIRST 9</td><td>${p1.first9Avg || '-'}</td><td>${p2.first9Avg || '-'}</td></tr>
-                <tr><td>SCORING AVG</td><td>${p1.scoringAvg || p1.avg}</td><td>${p2.scoringAvg || p2.avg}</td></tr>
-                <tr><td>CHECKOUT</td><td>${pct(p1.stats)}</td><td>${pct(p2.stats)}</td></tr>
-                <tr><td>140+</td><td>${p1.stats.score140}</td><td>${p2.stats.score140}</td></tr>
-                <tr><td>180</td><td>${p1.stats.score180}</td><td>${p2.stats.score180}</td></tr>
-                <tr><td>HI-OUT</td><td>${p1.stats.highestCheckout}</td><td>${p2.stats.highestCheckout}</td></tr>
-                <tr><td>RZUTY</td><td>${p1.dartsThrown}</td><td>${p2.dartsThrown}</td></tr>
-            `;
-            document.getElementById('match-modal').style.display = 'flex';
-        });
+
         let trendChartRef, distChartRef;
         function renderTrendChart(data) {
             const ctx = document.getElementById('trendChart').getContext('2d');
             if(trendChartRef) trendChartRef.destroy();
-            const grad = ctx.createLinearGradient(0,0,0,400); grad.addColorStop(0,'rgba(255, 74, 74, 0.5)'); grad.addColorStop(1,'rgba(255, 74, 74, 0)');
-            trendChartRef = new Chart(ctx, { type: 'line', data: { labels: data.labels, datasets: [
-                { label: 'AVG', data: data.avg, borderColor: '#ff4a4a', backgroundColor: grad, fill:true, tension:0.4 },
-                { label: 'Scoring Avg', data: data.scoring, borderColor: '#e91e63', borderDash:[5,5], tension:0.4 },
-                { label: 'First 9', data: data.first9, borderColor: '#3498db', borderDash:[2,2], tension:0.4 }
-            ] }, options: { responsive:true, maintainAspectRatio:false, plugins:{legend:{labels:{color:'white'}}}, scales:{y:{grid:{color:'#333'},ticks:{color:'#888'}}, x:{display:false}} } });
+            
+            // RED GRADIENT (Player)
+            const grad = ctx.createLinearGradient(0,0,0,400); 
+            grad.addColorStop(0,'rgba(255, 74, 74, 0.5)'); 
+            grad.addColorStop(1,'rgba(255, 74, 74, 0)');
+            
+            // BLUE GRADIENT (Opponent)
+            const gradBlue = ctx.createLinearGradient(0,0,0,400); 
+            gradBlue.addColorStop(0,'rgba(52, 152, 219, 0.5)'); 
+            gradBlue.addColorStop(1,'rgba(52, 152, 219, 0)');
+            
+            const datasets = [
+                { label: 'Ty (AVG)', data: data.avg, borderColor: '#ff4a4a', backgroundColor: grad, fill:true, tension:0.4 },
+                { label: 'Ty (Scoring)', data: data.scoring, borderColor: '#e91e63', borderDash:[5,5], tension:0.4 }
+            ];
+            
+            // OPPONENT LINES (IDENTICAL STYLE, BLUE COLORS)
+            if(data.oppAvg && data.oppAvg.length > 0) {
+                 // AVG: Solid line, filled gradient, same tension
+                 datasets.push({ 
+                     label: 'Rywal (AVG)', 
+                     data: data.oppAvg, 
+                     borderColor: '#3498db', 
+                     backgroundColor: gradBlue, 
+                     fill: true, 
+                     tension: 0.4
+                 });
+            }
+            if(data.oppScoring && data.oppScoring.length > 0) {
+                 // SCORING: Dashed line, lighter blue/cyan for contrast vs AVG
+                 datasets.push({ 
+                     label: 'Rywal (Scoring)', 
+                     data: data.oppScoring, 
+                     borderColor: '#00d2d3', 
+                     borderDash: [5,5], 
+                     tension: 0.4
+                 });
+            }
+
+            // First 9 only for overview or if not single match
+            if(!data.oppAvg && data.first9 && data.first9.length > 0) {
+                 datasets.push({ label: 'First 9', data: data.first9, borderColor: '#3498db', borderDash:[2,2], tension:0.4 });
+            }
+
+            trendChartRef = new Chart(ctx, { type: 'line', data: { labels: data.labels, datasets: datasets }, options: { responsive:true, maintainAspectRatio:false, plugins:{legend:{labels:{color:'white'}}}, scales:{y:{grid:{color:'#333'},ticks:{color:'#888'}}, x:{display:true, ticks:{color:'#666'}}} } });
         }
         function renderDistChart(data) {
             const ctx = document.getElementById('distChart').getContext('2d');
@@ -205,12 +270,16 @@
             svg.setAttribute("viewBox", "-200 -200 400 400");
             svg.setAttribute("width", "300"); svg.setAttribute("height", "300");
             const nums = [20, 1, 18, 4, 13, 6, 10, 15, 2, 17, 3, 19, 7, 16, 8, 11, 14, 9, 12, 5];
+            const radii = [0, 6.35, 15.9, 99, 109, 162, 170];
             
-            // POPRAWIONE PROMIENIE (ZGODNE Z INDEX.HTML)
-            const radii = [0, 6.35, 15.9, 99, 109, 162, 170]; 
-            
+            // CALCULATE TOTAL FOR PERCENTAGES
+            let totalHits = 0;
+            for(let key in heatmapData) totalHits += heatmapData[key];
+
             let maxHits = 0;
             for(let key in heatmapData) { if(heatmapData[key] > maxHits) maxHits = heatmapData[key]; }
+
+            const tooltip = document.getElementById('heatmap-tooltip');
 
             const getColor = (hits) => {
                 if(!hits) return null;
@@ -218,6 +287,19 @@
                 if(ratio < 0.2) return `rgba(46, 204, 113, ${0.3 + ratio})`; 
                 if(ratio < 0.5) return `rgba(241, 196, 15, ${0.4 + ratio})`;
                 return `rgba(231, 76, 60, ${0.5 + ratio})`;
+            };
+
+            const addTooltipEvents = (el, id, hits) => {
+                el.addEventListener('mousemove', (e) => {
+                    const percent = totalHits > 0 ? ((hits / totalHits) * 100).toFixed(1) : "0.0";
+                    tooltip.innerHTML = `<div style='text-align:center;font-weight:900;margin-bottom:2px;font-size:1.1em'>${id}</div>Trafień: <span style='color:#2ecc71;font-weight:bold'>${hits}</span><br>Udział: <span style='color:#3498db;font-weight:bold'>${percent}%</span>`;
+                    tooltip.style.display = 'block';
+                    tooltip.style.left = e.pageX + 'px';
+                    tooltip.style.top = e.pageY + 'px';
+                });
+                el.addEventListener('mouseleave', () => {
+                    tooltip.style.display = 'none';
+                });
             };
 
             for(let i=0; i<20; i++) {
@@ -239,10 +321,13 @@
                     let baseFill = (i%2===0) ? "#111" : "#222"; 
                     if(idPrefix === 'D' || idPrefix === 'T') baseFill = (i%2===0) ? "#333" : "#444";
                     
-                    const heatColor = getColor(heatmapData[pureId]);
+                    const hits = heatmapData[pureId] || 0;
+                    const heatColor = getColor(hits);
                     p.setAttribute("fill", heatColor || baseFill);
                     p.setAttribute("stroke", "#333");
                     p.setAttribute("stroke-width", "0.5");
+                    
+                    addTooltipEvents(p, pureId, hits);
                     svg.appendChild(p);
                 };
                 
@@ -254,9 +339,11 @@
             const makeCircle = (r, id, defColor) => {
                 const c = document.createElementNS(ns, "circle");
                 c.setAttribute("r", r); 
-                const heatColor = getColor(heatmapData[id]);
+                const hits = heatmapData[id] || 0;
+                const heatColor = getColor(hits);
                 c.setAttribute("fill", heatColor || defColor);
                 c.setAttribute("stroke", "#333");
+                addTooltipEvents(c, id, hits);
                 svg.appendChild(c);
             };
             makeCircle(15.9, "25", "#222");

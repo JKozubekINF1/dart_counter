@@ -34,7 +34,8 @@ let gameState = {
   turn: 0,
   starter: 0,
   players: [],
-  legDarts: [0, 0]
+  legDarts: [0, 0],
+  timeline: [] 
 };
 
 const saveState = () => {
@@ -44,15 +45,15 @@ const saveState = () => {
 
 io.on("connection", (socket) => {
   socket.on("init_stats_page", (userId) => {
-      const stats = calculateUserStats(userId);
+      const stats = calculateUserStats(userId, 'all');
+      socket.emit("full_stats_data", stats);
+  });
+
+  socket.on("get_stats", ({ userId, filter }) => {
+      const stats = calculateUserStats(userId, filter);
       socket.emit("full_stats_data", stats);
   });
   
-  socket.on("get_match_details", (matchId) => {
-      const match = db.matches.find(m => m.id == matchId);
-      if (match) socket.emit("history_match_details", match);
-  });
-
   socket.emit("update", gameState);
   socket.emit("users_list", db.users);
 
@@ -90,6 +91,7 @@ io.on("connection", (socket) => {
     gameState.legs = [0, 0];
     gameState.starter = 0;
     gameState.legDarts = [0, 0]; 
+    gameState.timeline = []; 
 
     const p1Name = getUserName(cfg.p1Id) || "GRACZ 1";
     const isBot = cfg.p2Id === "BOT";
@@ -129,11 +131,9 @@ io.on("connection", (socket) => {
       if (historyStack.length > 0) {
           gameState = historyStack.pop();
           const currentPlayer = gameState.players[gameState.turn];
-          
           if (currentPlayer.isBot && historyStack.length > 0) {
               gameState = historyStack.pop();
           }
-          
           io.emit("update", gameState);
           if (gameState.players[gameState.turn].isBot) checkBot();
       }
@@ -157,19 +157,20 @@ function getMinDartsToFinish(score) {
     return 2;
 }
 
+// BOGEY NUMBERS (Liczby <= 170 których nie da się skończyć w 3 rzutach)
+const BOGEY_NUMBERS = [169, 168, 166, 165, 163, 162, 159];
+
 function handleThrow(points, doublesMissed, finishDarts, segments) {
   if (isNaN(points) || points < 0 || points > 180) return;
 
   saveState();
   const pIdx = gameState.turn;
   const player = gameState.players[pIdx];
-  
-  // CZYSZCZENIE STATUSU PRZED RZUTEM (na wszelki wypadek)
-  player.status = ""; 
+  player.status = "";
 
   const scoreBefore = player.score;
   const newScore = player.score - points;
-  const dartsThrownInTurn = (newScore === 0) ? finishDarts : 3;
+  const dartsThrownInTurn = (newScore === 0 || newScore <= 1) ? finishDarts : 3; // Use finishDarts for Bust too
 
   if (points > player.matchStats.highTurn) player.matchStats.highTurn = points;
 
@@ -192,20 +193,22 @@ function handleThrow(points, doublesMissed, finishDarts, segments) {
 
   if (newScore === 0) {
     let lastSeg = null;
-    if (segments && Array.isArray(segments) && segments.length > 0) {
-        lastSeg = segments[segments.length - 1];
-    }
+    if (segments && Array.isArray(segments) && segments.length > 0) lastSeg = segments[segments.length - 1];
     const validCheckout = lastSeg ? (lastSeg.startsWith('D') || lastSeg === 'BULL') : true;
 
     if (!validCheckout) {
         // BUST (Single Out)
         player.status = "BUST";
-        if (doublesMissed > 0) player.matchStats.doublesThrown += doublesMissed;
-        player.dartsThrown += finishDarts; 
-        recalcAvgs(player);
-        io.emit("voice", { type: "bust" });
         
-        // ZMIANA TURY I CZYSZCZENIE STATUSU NASTĘPNEGO GRACZA
+        // LOGIKA BUST NA DUBLACH
+        if (scoreBefore <= 170 && !BOGEY_NUMBERS.includes(scoreBefore)) {
+             player.matchStats.doublesThrown += dartsThrownInTurn;
+        }
+
+        player.dartsThrown += dartsThrownInTurn; 
+        recalcAvgs(player);
+        recordTimeline(pIdx);
+        io.emit("voice", { type: "bust" });
         gameState.turn = gameState.turn === 0 ? 1 : 0;
         gameState.players[gameState.turn].status = ""; 
     } else {
@@ -223,6 +226,7 @@ function handleThrow(points, doublesMissed, finishDarts, segments) {
         }
 
         updateStats(player, points, finishDarts, true, calculatedMisses + 1);
+        recordTimeline(pIdx);
         io.emit("voice", { type: "gameshot" });
 
         gameState.legs[pIdx]++;
@@ -238,14 +242,18 @@ function handleThrow(points, doublesMissed, finishDarts, segments) {
         }
     }
   } else if (newScore <= 1) {
-    // BUST (Score too high)
+    // BUST (Over score)
     player.status = "BUST";
-    if (doublesMissed > 0) player.matchStats.doublesThrown += doublesMissed;
-    player.dartsThrown += 3;
-    recalcAvgs(player);
-    io.emit("voice", { type: "bust" });
     
-    // ZMIANA TURY I CZYSZCZENIE STATUSU NASTĘPNEGO GRACZA
+    // LOGIKA BUST NA DUBLACH
+    if (scoreBefore <= 170 && !BOGEY_NUMBERS.includes(scoreBefore)) {
+         player.matchStats.doublesThrown += dartsThrownInTurn;
+    }
+
+    player.dartsThrown += dartsThrownInTurn; 
+    recalcAvgs(player);
+    recordTimeline(pIdx);
+    io.emit("voice", { type: "bust" });
     gameState.turn = gameState.turn === 0 ? 1 : 0;
     gameState.players[gameState.turn].status = ""; 
   } else {
@@ -253,9 +261,8 @@ function handleThrow(points, doublesMissed, finishDarts, segments) {
     player.score = newScore;
     if (doublesMissed > 0) player.matchStats.doublesThrown += doublesMissed;
     updateStats(player, points, 3, false, doublesMissed);
+    recordTimeline(pIdx);
     io.emit("voice", { type: "score", val: points });
-    
-    // ZMIANA TURY I CZYSZCZENIE STATUSU NASTĘPNEGO GRACZA
     gameState.turn = gameState.turn === 0 ? 1 : 0;
     gameState.players[gameState.turn].status = ""; 
   }
@@ -264,6 +271,18 @@ function handleThrow(points, doublesMissed, finishDarts, segments) {
     io.emit("update", gameState);
     checkBot();
   }
+}
+
+function recordTimeline(playerIdx) {
+    const p = gameState.players[playerIdx];
+    if (!gameState.timeline) gameState.timeline = [];
+    gameState.timeline.push({
+        playerId: p.dbId,
+        isBot: p.isBot,
+        avg: parseFloat(p.avg),
+        scoringAvg: parseFloat(p.scoringAvg),
+        turn: gameState.timeline.length + 1
+    });
 }
 
 function initLeg(score, starter) {
@@ -281,6 +300,7 @@ function endMatch(winner) {
     date: Date.now(),
     winnerId: winner.dbId || "BOT",
     scoreStr: `${gameState.legs[0]} : ${gameState.legs[1]}`,
+    timeline: gameState.timeline,
     players: gameState.players.map(p => ({
       dbId: p.dbId, name: p.name, stats: p.matchStats, avg: p.avg, scoringAvg: p.scoringAvg, first9Avg: p.first9Avg, dartsThrown: p.dartsThrown
     }))
@@ -295,6 +315,7 @@ function checkBot() {
   if (gameState.status !== "PLAYING") return;
   const p = gameState.players[gameState.turn];
   if (p.isBot) {
+    // WYDŁUŻONY CZAS DLA BOTA (3s - 4.5s)
     botTimeout = setTimeout(() => {
         const avg = gameState.config.botLevel;
         const checkoutChance = gameState.config.botCheckout;
@@ -321,7 +342,7 @@ function checkBot() {
         }
 
         handleThrow(score, miss, finish, null);
-    }, 1000 + Math.random() * 800);
+    }, 3000 + Math.random() * 1500); // 3 do 4.5 sekundy
   }
 }
 
@@ -370,24 +391,41 @@ function recalcAvgs(p) {
     if (p.matchStats.doublesThrown > 0) p.matchStats.checkoutPercent = ((p.matchStats.doublesHit / p.matchStats.doublesThrown) * 100).toFixed(1) + "%";
 }
 
-function calculateUserStats(userId) {
-  const matches = db.matches.filter(m => m.players.some(p => p.dbId === userId));
+function calculateUserStats(userId, filter = 'all') {
+  let matches = db.matches.filter(m => m.players.some(p => p.dbId === userId));
+  
+  // *** POPRAWKA: SORTOWANIE PRZED WYBOREM POJEDYNCZEGO MECZU ***
+  matches.sort((a, b) => b.date - a.date);
+
+  // 1. POJEDYNCZY MECZ
+  if (filter !== 'all' && filter !== 'today' && filter !== 'week' && filter !== 'month') {
+      const singleMatch = matches.find(m => m.id == filter);
+      if (singleMatch) return generateSingleMatchStats(userId, singleMatch, matches);
+  }
+
+  // 2. FILTRY CZASOWE
+  const now = new Date();
+  const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+  if (filter === 'today') matches = matches.filter(m => m.date >= startOfDay);
+  else if (filter === 'week') matches = matches.filter(m => m.date >= startOfDay - (7*86400000));
+  else if (filter === 'month') matches = matches.filter(m => m.date >= startOfDay - (30*86400000));
+
+  // Sortowanie zostało już wykonane wyżej, więc tu nie jest konieczne, 
+  // ale nie zaszkodzi zostawić dla pewności przy filtrach.
   matches.sort((a, b) => b.date - a.date);
 
   let totalDarts=0, totalScore=0, f9Sum=0, f9Count=0, dHit=0, dThrown=0, games=0, wins=0;
   let s0=0,s20=0,s40=0,s60=0,s80=0,s100=0,s120=0,s140=0,s180=0;
   let bestLeg=null, hiOut=0, hiTurn=0;
   let aggregatedHeatmap = {};
+  let trendLabels=[], trendAvg=[], trendScoring=[];
   
-  let trendLabels=[], trendAvg=[], trendFirst9=[], trendScoring=[];
-  const recentMatches = matches.slice(0, 20).reverse();
-
-  recentMatches.forEach(m => {
+  const chartMatches = matches.slice(0, 30).reverse();
+  chartMatches.forEach(m => {
       const p = m.players.find(x => x.dbId === userId);
       if(!p) return;
       trendLabels.push(new Date(m.date).toLocaleDateString(undefined, {month:'numeric', day:'numeric'}));
       trendAvg.push(parseFloat(p.avg));
-      trendFirst9.push(parseFloat(p.first9Avg || p.avg));
       trendScoring.push(parseFloat(p.scoringAvg || p.avg));
   });
 
@@ -404,12 +442,9 @@ function calculateUserStats(userId) {
       if(p.stats.highestCheckout > hiOut) hiOut = p.stats.highestCheckout;
       if(p.stats.highTurn > hiTurn) hiTurn = p.stats.highTurn;
       if(p.stats.bestLeg !== null && (bestLeg === null || p.stats.bestLeg < bestLeg)) bestLeg = p.stats.bestLeg;
-
-      if(p.stats.heatmap) {
-          for(const [seg, count] of Object.entries(p.stats.heatmap)) {
-              if(!aggregatedHeatmap[seg]) aggregatedHeatmap[seg] = 0;
-              aggregatedHeatmap[seg] += count;
-          }
+      if(p.stats.heatmap) for(const [seg, count] of Object.entries(p.stats.heatmap)) {
+          if(!aggregatedHeatmap[seg]) aggregatedHeatmap[seg] = 0;
+          aggregatedHeatmap[seg] += count;
       }
   });
 
@@ -420,9 +455,10 @@ function calculateUserStats(userId) {
 
   return {
     user: getUserName(userId),
+    isSingleMatch: false,
     summary: { avg, first9, coPct, winRate, games, wins, bestLeg: bestLeg||"-", hiOut, hiTurn },
     distribution: [s0, s20, s40, s60, s80, s100, s120, s140, s180],
-    charts: { labels: trendLabels, avg: trendAvg, first9: trendFirst9, scoring: trendScoring },
+    charts: { labels: trendLabels, avg: trendAvg, scoring: trendScoring, title: "FORMA (AVG)" },
     heatmap: aggregatedHeatmap,
     history: matches.map(m => ({
         id: m.id, date: m.date, result: m.winnerId===userId?"W":"L", score: m.scoreStr,
@@ -432,4 +468,80 @@ function calculateUserStats(userId) {
   };
 }
 
-server.listen(3100, "0.0.0.0", () => console.log("Dart PRO Ultimate 3.9 Server 3100"));
+function generateSingleMatchStats(userId, m, allMatches) {
+    const p = m.players.find(x => x.dbId === userId);
+    
+    // ZNAJDŹ PRZECIWNIKA
+    const opponent = m.players.find(x => x.dbId !== userId);
+    const opponentAvg = opponent ? opponent.avg : "-";
+    const opponentScoring = opponent ? (opponent.scoringAvg || opponent.avg) : "-";
+
+    let trendLabels=[], trendAvg=[], trendScoring=[];
+    let trendOppAvg=[], trendOppScoring=[];
+
+    if (m.timeline) {
+        const userTimeline = m.timeline.filter(t => t.playerId === userId);
+        const opponentTimeline = m.timeline.filter(t => t.playerId !== userId);
+
+        userTimeline.forEach((t, i) => {
+            trendLabels.push("T" + (i+1));
+            trendAvg.push(t.avg);
+            trendScoring.push(t.scoringAvg);
+
+            if (opponentTimeline[i]) {
+                trendOppAvg.push(opponentTimeline[i].avg);
+                trendOppScoring.push(opponentTimeline[i].scoringAvg);
+            } else {
+                trendOppAvg.push(null);
+                trendOppScoring.push(null);
+            }
+        });
+    }
+
+    const pct = p.stats.doublesThrown > 0 ? ((p.stats.doublesHit / p.stats.doublesThrown) * 100).toFixed(1) : "0.0";
+    const coDisplay = `${p.stats.doublesHit}/${p.stats.doublesThrown} (${pct}%)`;
+
+    return {
+        user: getUserName(userId),
+        isSingleMatch: true, 
+        summary: { 
+            avg: p.avg, 
+            scoringAvg: p.scoringAvg, 
+            opponentAvg: opponentAvg, 
+            opponentScoring: opponentScoring, 
+            first9: p.first9Avg || "-", 
+            coPct: coDisplay, 
+            winRate: "N/A", 
+            games: "N/A", wins: "N/A", 
+            bestLeg: p.stats.bestLeg || "-", 
+            hiOut: p.stats.highestCheckout, 
+            hiTurn: p.stats.highTurn,
+            total180: p.stats.score180,
+            total140: p.stats.score140,
+            total100: p.stats.score100,
+            dartsThrown: p.dartsThrown,
+            matchResult: m.winnerId === userId ? "ZWYCIĘSTWO" : "PORAŻKA"
+        },
+        distribution: [
+            p.stats.score0||0, p.stats.score20||0, p.stats.score40||0, 
+            p.stats.score60||0, p.stats.score80||0, p.stats.score100, 
+            p.stats.score120||0, p.stats.score140, p.stats.score180
+        ],
+        charts: { 
+            labels: trendLabels, 
+            avg: trendAvg, 
+            scoring: trendScoring, 
+            oppAvg: trendOppAvg,
+            oppScoring: trendOppScoring,
+            title: "PRZEBIEG MECZU (TY vs RYWAL)"
+        },
+        heatmap: p.stats.heatmap || {},
+        history: allMatches.map(mm => ({
+            id: mm.id, date: mm.date, result: mm.winnerId===userId?"W":"L", score: mm.scoreStr,
+            rival: mm.players.find(x => x.dbId !== userId)?.name || "Unknown",
+            avg: mm.players.find(x => x.dbId === userId)?.avg
+        }))
+    };
+}
+
+server.listen(3100, "0.0.0.0", () => console.log("Dart PRO Ultimate 5.0 Server 3100"));
