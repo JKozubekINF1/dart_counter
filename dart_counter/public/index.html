@@ -169,6 +169,16 @@
       <button class="start-btn" onclick="startGame()">START</button>
     </div>
 
+    <div id="starter-modal" class="modal-bg">
+        <div class="modal-content">
+            <h2 style="color: var(--gold); margin-bottom: 30px; font-size: 1.5rem;">KTO ZACZYNA?</h2>
+            <div style="display: flex; gap: 20px; justify-content: center;">
+                <button onclick="confirmStart(0)" style="flex:1; padding: 30px 10px; background: var(--green-bg); border: 2px solid var(--green-pastel); border-radius: 15px; cursor: pointer; color: var(--green-pastel); font-size: 1.2rem; font-weight: 900;">JA</button>
+                <button onclick="confirmStart(1)" style="flex:1; padding: 30px 10px; background: var(--red-bg); border: 2px solid var(--red-pastel); border-radius: 15px; cursor: pointer; color: var(--red-pastel); font-size: 1.2rem; font-weight: 900;">RYWAL</button>
+            </div>
+        </div>
+    </div>
+
     <div id="game" class="layout-keypad">
         
         <div class="game-header">
@@ -286,6 +296,9 @@
       let tempVal = 0;
       let inputMode = 'keypad';
       let dartBuffer = []; 
+      
+      // Zmienna do przechowywania konfigu przed wyborem kto zaczyna
+      let pendingGameConfig = null;
 
       function switchMode(m) {
           inputMode = m;
@@ -371,11 +384,8 @@
           updateSlots();
           const sum = dartBuffer.reduce((a,b)=>a+b.s,0);
           const rem = myScore - sum;
-          // IMPORTANT: Fixed missing brace in prev version? No, logic was just limited.
-          // Now just update UI, user must click submit or handle 0 logic in buffer
           if(rem < 0 || rem === 1) {
               // Bust logic handled in submitDarts
-              // Just visual update is fine, user clicks submit
           }
       }
 
@@ -400,33 +410,25 @@
           if(dartBuffer.length===0) return;
           const total = dartBuffer.reduce((a,b)=>a+b.s,0);
           const last = dartBuffer[dartBuffer.length-1];
-          const seg = last.id; // Send only last segment for finish check logic
-          
-          // MAP ALL SEGMENTS FOR HEATMAP
+          const seg = last.id; 
           const allSegments = dartBuffer.map(d => d.id);
-
           const rem = myScore - total;
-          
           const savedBuffer = [...dartBuffer];
           dartBuffer = []; updateSlots();
 
           if(rem === 0) {
               const isDouble = seg.startsWith('D') || seg === 'BULL';
               if(isDouble) {
-                  // Direct finish, no modal needed for board as we know count
                   send(total, 0, savedBuffer.length, allSegments);
               } else {
-                  // Bust (Single out)
                   send(total, 0, 3, allSegments);
               }
               return;
           }
 
-          // MISS DOUBLES LOGIC FOR BOARD
           const bogeyNumbers = [169, 168, 166, 165, 163, 162, 159];
           const isCheckoutRange = (myScore <= 170 && !bogeyNumbers.includes(myScore));
           
-          // Only ask if rem > 1 (not bust) and was in checkout range
           if (isCheckoutRange && rem > 1) { 
               const m = document.getElementById('checkout-modal');
               const t = document.getElementById('cm-title');
@@ -491,15 +493,32 @@
       function updBotCo(v) { document.getElementById("bot-co-lbl").innerText = `${v}%`; }
       function toggleBot(v) { const b = v==="BOT"; document.getElementById("bot-opts").style.display=b?"block":"none"; document.getElementById("p2-stats-btn").style.display=b?"none":"block"; }
       function promptUser() { const n=prompt("Nazwa:"); if(n) socket.emit("create_user", n); }
+      
+      // *** NOWA LOGIKA STARTU ***
       function startGame() { 
           const s = document.getElementById("c-score").value; const l = document.getElementById("c-legs").value;
           if(s<101 || l<1) { alert("Błędne dane!"); return; }
-          socket.emit("startGame", {
+          
+          // Zapisujemy konfig
+          pendingGameConfig = {
               startScore:s, legsToWin:l, 
               botLevel:document.getElementById("c-bot").value, botCheckout:document.getElementById("c-bot-co").value,
               p1Id:document.getElementById("p1-sel").value, p2Id:document.getElementById("p2-sel").value
-          });
+          };
+          
+          // Pokazujemy popup kto zaczyna
+          document.getElementById('starter-modal').style.display = 'flex';
       }
+
+      // Funkcja potwierdzająca wybór startera
+      function confirmStart(starterIndex) {
+          if(!pendingGameConfig) return;
+          pendingGameConfig.starter = starterIndex;
+          socket.emit("startGame", pendingGameConfig);
+          document.getElementById('starter-modal').style.display = 'none';
+          document.getElementById('setup').style.display = 'none'; // Na wszelki wypadek ukryj od razu
+      }
+
       function abortGame() { if(confirm("Przerwać?")) socket.emit("abort_game"); }
       function reset() { document.getElementById("match-details-overlay").style.display="none"; socket.emit("reset"); }
       
@@ -537,7 +556,13 @@
       socket.on("update", (s) => {
           const setup = document.getElementById("setup");
           const game = document.getElementById("game");
-          if (s.status === "SETUP") { setup.style.display = "flex"; game.style.display = "none"; document.getElementById('match-details-overlay').style.display='none'; }
+          if (s.status === "SETUP") { 
+              setup.style.display = "flex"; 
+              game.style.display = "none"; 
+              document.getElementById('match-details-overlay').style.display='none'; 
+              // Ukryj modal jeśli ktoś przerwał grę
+              document.getElementById('starter-modal').style.display='none';
+          }
           else if (s.status === "MATCH_FINISHED") { 
               const p1=s.players[0], p2=s.players[1];
               document.getElementById("md-info").innerText = `${s.winner} WYGRYWA! | ${s.legs[0]}:${s.legs[1]}`;
@@ -557,7 +582,6 @@
               setup.style.display="none"; game.style.display="flex";
               document.getElementById("match-score").innerText = `${s.legs[0]} : ${s.legs[1]}`;
               
-              // FIX: Update myScore based on CURRENT turn, not just player 0
               myScore = s.players[s.turn].score;
               
               s.players.forEach((p, i) => {
@@ -590,7 +614,6 @@
               const isBot = s.players[s.turn].isBot;
               document.getElementById("bot-overlay").style.display = isBot ? "flex" : "none";
               
-              // Force visibility based on inputMode only if not bot
               if(!isBot) {
                   document.getElementById("keypad-ui").style.display = inputMode==='keypad'?"flex":"none";
                   document.getElementById("dartboard-ui").style.display = inputMode==='board'?"flex":"none";

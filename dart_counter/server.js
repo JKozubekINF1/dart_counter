@@ -89,7 +89,10 @@ io.on("connection", (socket) => {
       botCheckout: parseInt(cfg.botCheckout) || 20,
     };
     gameState.legs = [0, 0];
-    gameState.starter = 0;
+    
+    // Ustawiamy startera na podstawie wyboru z popupu
+    gameState.starter = (cfg.starter !== undefined) ? cfg.starter : 0;
+    
     gameState.legDarts = [0, 0]; 
     gameState.timeline = []; 
 
@@ -102,9 +105,14 @@ io.on("connection", (socket) => {
       createPlayer(1, p2Name, gameState.config.startScore, isBot, isBot ? null : cfg.p2Id)
     ];
 
+    // Ustawiamy turę na tego kto ma zacząć
+    gameState.turn = gameState.starter;
     gameState.status = "PLAYING";
+    
     io.emit("update", gameState);
     io.emit("voice", { type: "gameon" });
+    
+    // Jeśli zaczyna Bot/Rywal, checkBot to wykryje i rzuci
     checkBot();
   });
 
@@ -126,18 +134,33 @@ io.on("connection", (socket) => {
     handleThrow(points, doublesMissed, finishDarts, segments);
   });
 
+  // --- POPRAWIONE UNDO ---
   socket.on("undo", () => {
-      clearTimeout(botTimeout);
+      // 1. Najważniejsze: zatrzymaj bota, jeśli myśli
+      if (botTimeout) {
+          clearTimeout(botTimeout);
+          botTimeout = null;
+      }
+
       if (historyStack.length > 0) {
+          // Cofnij ostatni ruch (to zazwyczaj ruch bota)
           gameState = historyStack.pop();
-          const currentPlayer = gameState.players[gameState.turn];
-          if (currentPlayer.isBot && historyStack.length > 0) {
-              gameState = historyStack.pop();
+
+          // Jeśli gramy z botem (botLevel > 0) i po cofnięciu jest tura bota (turn === 1),
+          // to znaczy, że cofnęliśmy tylko jego rzut. Cofamy raz jeszcze, żeby wrócić do Gracza.
+          if (gameState.config.botLevel > 0 && gameState.turn === 1) {
+              if (historyStack.length > 0) {
+                  gameState = historyStack.pop();
+              }
           }
+
           io.emit("update", gameState);
+
+          // Jeśli mimo wszystko wypadło na bota, niech myśli od nowa
           if (gameState.players[gameState.turn].isBot) checkBot();
       }
   });
+  // -----------------------
 
   socket.on("reset", () => {
     clearTimeout(botTimeout);
@@ -157,7 +180,6 @@ function getMinDartsToFinish(score) {
     return 2;
 }
 
-// BOGEY NUMBERS (Liczby <= 170 których nie da się skończyć w 3 rzutach)
 const BOGEY_NUMBERS = [169, 168, 166, 165, 163, 162, 159];
 
 function handleThrow(points, doublesMissed, finishDarts, segments) {
@@ -170,7 +192,7 @@ function handleThrow(points, doublesMissed, finishDarts, segments) {
 
   const scoreBefore = player.score;
   const newScore = player.score - points;
-  const dartsThrownInTurn = (newScore === 0 || newScore <= 1) ? finishDarts : 3; // Use finishDarts for Bust too
+  const dartsThrownInTurn = (newScore === 0 || newScore <= 1) ? finishDarts : 3; 
 
   if (points > player.matchStats.highTurn) player.matchStats.highTurn = points;
 
@@ -197,14 +219,10 @@ function handleThrow(points, doublesMissed, finishDarts, segments) {
     const validCheckout = lastSeg ? (lastSeg.startsWith('D') || lastSeg === 'BULL') : true;
 
     if (!validCheckout) {
-        // BUST (Single Out)
         player.status = "BUST";
-        
-        // LOGIKA BUST NA DUBLACH
         if (scoreBefore <= 170 && !BOGEY_NUMBERS.includes(scoreBefore)) {
              player.matchStats.doublesThrown += dartsThrownInTurn;
         }
-
         player.dartsThrown += dartsThrownInTurn; 
         recalcAvgs(player);
         recordTimeline(pIdx);
@@ -212,7 +230,6 @@ function handleThrow(points, doublesMissed, finishDarts, segments) {
         gameState.turn = gameState.turn === 0 ? 1 : 0;
         gameState.players[gameState.turn].status = ""; 
     } else {
-        // VALID CHECKOUT
         player.score = 0;
         player.status = "GAME SHOT";
         const minDarts = getMinDartsToFinish(scoreBefore);
@@ -242,14 +259,10 @@ function handleThrow(points, doublesMissed, finishDarts, segments) {
         }
     }
   } else if (newScore <= 1) {
-    // BUST (Over score)
     player.status = "BUST";
-    
-    // LOGIKA BUST NA DUBLACH
     if (scoreBefore <= 170 && !BOGEY_NUMBERS.includes(scoreBefore)) {
          player.matchStats.doublesThrown += dartsThrownInTurn;
     }
-
     player.dartsThrown += dartsThrownInTurn; 
     recalcAvgs(player);
     recordTimeline(pIdx);
@@ -257,7 +270,6 @@ function handleThrow(points, doublesMissed, finishDarts, segments) {
     gameState.turn = gameState.turn === 0 ? 1 : 0;
     gameState.players[gameState.turn].status = ""; 
   } else {
-    // NORMAL SCORE
     player.score = newScore;
     if (doublesMissed > 0) player.matchStats.doublesThrown += doublesMissed;
     updateStats(player, points, 3, false, doublesMissed);
@@ -315,7 +327,6 @@ function checkBot() {
   if (gameState.status !== "PLAYING") return;
   const p = gameState.players[gameState.turn];
   if (p.isBot) {
-    // WYDŁUŻONY CZAS DLA BOTA (3s - 4.5s)
     botTimeout = setTimeout(() => {
         const avg = gameState.config.botLevel;
         const checkoutChance = gameState.config.botCheckout;
@@ -342,7 +353,7 @@ function checkBot() {
         }
 
         handleThrow(score, miss, finish, null);
-    }, 3000 + Math.random() * 1500); // 3 do 4.5 sekundy
+    }, 3000 + Math.random() * 1500); 
   }
 }
 
@@ -393,25 +404,19 @@ function recalcAvgs(p) {
 
 function calculateUserStats(userId, filter = 'all') {
   let matches = db.matches.filter(m => m.players.some(p => p.dbId === userId));
-  
-  // *** POPRAWKA: SORTOWANIE PRZED WYBOREM POJEDYNCZEGO MECZU ***
   matches.sort((a, b) => b.date - a.date);
 
-  // 1. POJEDYNCZY MECZ
   if (filter !== 'all' && filter !== 'today' && filter !== 'week' && filter !== 'month') {
       const singleMatch = matches.find(m => m.id == filter);
       if (singleMatch) return generateSingleMatchStats(userId, singleMatch, matches);
   }
 
-  // 2. FILTRY CZASOWE
   const now = new Date();
   const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
   if (filter === 'today') matches = matches.filter(m => m.date >= startOfDay);
   else if (filter === 'week') matches = matches.filter(m => m.date >= startOfDay - (7*86400000));
   else if (filter === 'month') matches = matches.filter(m => m.date >= startOfDay - (30*86400000));
 
-  // Sortowanie zostało już wykonane wyżej, więc tu nie jest konieczne, 
-  // ale nie zaszkodzi zostawić dla pewności przy filtrach.
   matches.sort((a, b) => b.date - a.date);
 
   let totalDarts=0, totalScore=0, f9Sum=0, f9Count=0, dHit=0, dThrown=0, games=0, wins=0;
@@ -470,8 +475,6 @@ function calculateUserStats(userId, filter = 'all') {
 
 function generateSingleMatchStats(userId, m, allMatches) {
     const p = m.players.find(x => x.dbId === userId);
-    
-    // ZNAJDŹ PRZECIWNIKA
     const opponent = m.players.find(x => x.dbId !== userId);
     const opponentAvg = opponent ? opponent.avg : "-";
     const opponentScoring = opponent ? (opponent.scoringAvg || opponent.avg) : "-";
@@ -544,4 +547,13 @@ function generateSingleMatchStats(userId, m, allMatches) {
     };
 }
 
-server.listen(3100, "0.0.0.0", () => console.log("Dart PRO Ultimate 5.0 Server 3100"));
+// --- PORT 3100 Z ŁADNYM OZNACZENIEM W KONSOLI ---
+const PORT = 3100;
+server.listen(PORT, "0.0.0.0", () => {
+    console.log("");
+    console.log("###################################################");
+    console.log(`##  SUKCES! SERWER DZIALA NA PORCIE ${PORT}       ##`);
+    console.log("##  Nie zamykaj tego okna podczas gry.           ##");
+    console.log("###################################################");
+    console.log("");
+});
