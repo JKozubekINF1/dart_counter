@@ -15,7 +15,6 @@
       }
       * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; font-family: "Inter", sans-serif; user-select: none; }
       body { margin: 0; background: var(--bg-main); color: var(--text-main); height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
-
       #setup { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px; padding: 25px; overflow-y: auto; }
       h1 { color: var(--text-sub); margin-bottom: 20px; font-size: 2rem; text-transform: uppercase; font-weight: 900; letter-spacing: 2px; text-align: center; }
       .setup-card { width: 100%; max-width: 450px; background: var(--bg-panel); border-radius: 20px; padding: 25px; box-shadow: 0 10px 40px rgba(0,0,0,0.4); border: 1px solid var(--border); display: flex; flex-direction: column; gap: 20px; }
@@ -25,38 +24,25 @@
       .add-btn { background: var(--bg-input); border: 1px solid var(--border); color: var(--green-pastel); width: 55px; border-radius: 12px; font-size: 1.5rem; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.2s; }
       .stats-link-btn { width: 100%; background: transparent; border: 1px solid var(--border); color: var(--accent); padding: 12px; font-weight: 700; border-radius: 10px; cursor: pointer; text-transform: uppercase; font-size: 0.8rem; margin-top: 5px; transition:0.2s; }
       .start-btn { background: linear-gradient(135deg, var(--text-main), #b0b0b0); color: black; border: none; padding: 20px; font-size: 1.3rem; font-weight: 900; border-radius: 50px; width: 100%; max-width: 450px; cursor: pointer; letter-spacing: 1px; box-shadow: 0 5px 20px rgba(255,255,255,0.15); transition: transform 0.1s; }
-
       #game { display: none; height: 100%; width: 100%; overflow: hidden; flex-direction: column; }
-      
-      .game-header { 
-          height: 60px; display: flex; justify-content: space-between; align-items: center; 
-          padding: 0 20px; border-bottom: 1px solid var(--border); background: var(--bg-panel); flex-shrink: 0;
-      }
+      .game-header { height: 60px; display: flex; justify-content: space-between; align-items: center; padding: 0 20px; border-bottom: 1px solid var(--border); background: var(--bg-panel); flex-shrink: 0; }
       .view-toggle { display: flex; background: #111; border-radius: 8px; overflow: hidden; border: 1px solid #333; }
       .vt-btn { background: transparent; border: none; padding: 8px 15px; cursor: pointer; font-size: 1.2rem; color: #555; transition: 0.2s; }
       .vt-btn.active { background: var(--text-main); color: #000; }
       .legs-score { color: white; font-size: 1.5rem; font-weight: 900; letter-spacing: 2px; }
       .abort-btn { background: transparent; color: #444; border: none; font-size: 1.5rem; cursor: pointer; font-weight: bold; transition:0.2s; }
       .abort-btn:hover { color: var(--red-pastel); }
-
       .game-content { flex: 1; display: flex; overflow: hidden; }
-
-      /* LAYOUTS */
-      /* KEYPAD: Scores 55% / Input 45% */
       #game.layout-keypad .game-content { flex-direction: column; }
       #game.layout-keypad .scores-section { flex-direction: row; height: 55%; width: 100%; border-bottom: 1px solid var(--border); border-right: none; }
       #game.layout-keypad .player-card { border-bottom: none; border-right: 1px solid var(--border); }
       #game.layout-keypad .input-section { height: 45%; width: 100%; }
-
-      /* BOARD: Scores 45% / Input 55% */
       #game.layout-board .game-content { flex-direction: row; }
       #game.layout-board .scores-section { flex-direction: column; width: 45%; height: 100%; border-right: 1px solid var(--border); border-bottom: none; }
       #game.layout-board .player-card { border-right: none; border-bottom: 1px solid var(--border); }
       #game.layout-board .input-section { width: 55%; height: 100%; }
-
       .scores-section { display: flex; background: #0a0a0c; }
       .input-section { display: flex; flex-direction: column; background: var(--bg-panel); position: relative; }
-
       .player-card { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; padding: 10px; transition: 0.3s; }
       .player-card#p0 { background: radial-gradient(circle at top left, #1a251b 0%, #0a0a0c 70%); }
       .player-card#p0.active { background: radial-gradient(circle at top left, #2e4a31 0%, #0a0a0c 100%); }
@@ -64,12 +50,10 @@
       .player-card#p1 { background: radial-gradient(circle at bottom left, #361e1e 0%, #0a0a0c 70%); }
       .player-card#p1.active { background: radial-gradient(circle at bottom left, #5c2b2b 0%, #0a0a0c 100%); }
       .player-card#p1 .p-score { color: var(--red-pastel); }
-
       #game.layout-keypad .player-card#p0.active { border-bottom: 4px solid var(--green-pastel); }
       #game.layout-keypad .player-card#p1.active { border-bottom: 4px solid var(--red-pastel); }
       #game.layout-board .player-card#p0.active { border-right: 4px solid var(--green-pastel); }
       #game.layout-board .player-card#p1.active { border-right: 4px solid var(--red-pastel); }
-
       .p-name { font-size: 1.2rem; font-weight: 700; text-transform: uppercase; color: #888; margin-bottom: 5px; }
       .p-score { font-size: 6rem; font-weight: 900; line-height: 1; text-shadow: 0 5px 20px rgba(0,0,0,0.5); }
       .info-grid { display: grid; grid-template-columns: 1fr 1fr; width: 90%; gap: 8px; margin-top: 15px; }
@@ -79,78 +63,55 @@
       .checkout-box { min-height: 25px; margin-top: 5px; display:flex; flex-direction:column; align-items:center; }
       .co-item { color: var(--accent); font-weight: 700; font-size: 0.8rem; opacity: 0.7; }
       .co-item.best { font-size: 1.2rem; color: #fff; opacity: 1; text-shadow: 0 0 10px rgba(255,255,255,0.4); }
-
-      /* KEYPAD UI */
       #keypad-ui { flex: 1; display: none; flex-direction: column; padding: 20px; justify-content: center; background: var(--bg-main); }
-      .input-display { 
-          width: 100%; background: transparent; border: none; border-bottom: 2px solid #333; color: white; 
-          padding: 10px; font-size: 3.5rem; font-weight: 300; text-align: center; 
-          margin-bottom: 20px; outline: none; font-family: 'Inter', sans-serif;
-      }
+      .input-display { width: 100%; background: transparent; border: none; border-bottom: 2px solid #333; color: white; padding: 10px; font-size: 3.5rem; font-weight: 300; text-align: center; margin-bottom: 20px; outline: none; font-family: 'Inter', sans-serif; }
       .key-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; flex: 1; max-height: 500px; }
-      .key-btn { 
-          background: #1e1e1e; color: white; border: none; font-size: 1.8rem; font-weight: 400; 
-          border-radius: 50px; cursor: pointer; transition: 0.1s; display: flex; align-items: center; justify-content: center;
-      }
+      .key-btn { background: #1e1e1e; color: white; border: none; font-size: 1.8rem; font-weight: 400; border-radius: 50px; cursor: pointer; transition: 0.1s; display: flex; align-items: center; justify-content: center; }
       .key-btn:active { background: #333; transform: scale(0.95); }
       .k-del { color: var(--red-pastel); background: rgba(229, 115, 115, 0.1); } 
       .k-ok { background: var(--green-pastel); color: black; font-weight: 800; border-radius: 16px; } 
       .k-back { color: #888; font-size:0.9rem; background: transparent; font-weight: 600; text-transform: uppercase; }
-
-      /* DARTBOARD UI */
       #dartboard-ui { flex: 1; display: none; flex-direction: column; align-items: center; padding: 10px; height: 100%; overflow: hidden; }
+      .slots-container, .board-actions { position: relative; z-index: 10; pointer-events: auto; }
       .slots-container { display: flex; gap: 10px; margin-bottom: 5px; width: 100%; justify-content: center; height: 50px; }
       .slot { width: 60px; height: 45px; background: #111; border: 1px solid #333; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #555; font-size: 1.2rem; font-weight: 900; }
       .slot.filled { border-color: var(--accent); color: white; background: #222; box-shadow: 0 0 10px rgba(100,181,246,0.1); }
-
-      .board-center-row { flex: 1; width: 100%; display: flex; align-items: center; justify-content: center; gap: 5px; overflow: hidden; }
+      .board-center-row { flex: 1; width: 100%; display: flex; align-items: center; justify-content: center; overflow: hidden; position: relative; z-index: 1; }
       .board-svg-container { flex: 1; height: 100%; display: flex; justify-content: center; align-items: center; position: relative; }
       svg { height: 98%; width: auto; max-width: 100%; filter: drop-shadow(0 5px 20px rgba(0,0,0,0.5)); touch-action: manipulation; }
+      path, circle, rect { cursor: pointer; }
       path:hover { opacity: 0.8; }
       path:active, circle:active { fill: white !important; }
-
-      .miss-vertical {
-          width: 40px; height: 60%; max-height: 250px; border-radius: 20px; 
-          background: #2b1e1e; border: 2px solid var(--red-pastel); color: var(--red-pastel);
-          font-weight: 900; font-size: 0.9rem; cursor: pointer; letter-spacing: 2px;
-          writing-mode: vertical-rl; text-orientation: upright; display: flex; align-items: center; justify-content: center;
-          transition: 0.1s; box-shadow: 0 4px 10px rgba(0,0,0,0.3); margin-left: 5px;
-      }
-      .miss-vertical:active { background: var(--red-pastel); color: black; transform: scale(0.95); }
-
+      .svg-miss-bg { fill: transparent; transition: fill 0.15s; cursor: crosshair; }
+      .svg-miss-bg:hover { fill: rgba(229, 115, 115, 0.15) !important; }
       .board-actions { display: flex; gap: 10px; width: 100%; max-width: 400px; margin-top: 5px; height: 55px; }
-      .act-btn { flex: 1; border-radius: 12px; border: none; font-weight: bold; cursor: pointer; font-size: 1rem; color: black; transition: 0.1s; }
+      .act-btn { flex: 1; border-radius: 12px; border: none; font-weight: bold; cursor: pointer; font-size: 1rem; color: black; transition: 0.1s; cursor: pointer; }
       .act-btn:active { transform: scale(0.98); }
       .btn-undo { background: #222; color: #888; border: 1px solid #333; }
       .btn-undo-turn { background: #332b00; color: var(--gold); border: 1px solid var(--gold); }
       .btn-ok { background: var(--green-pastel); }
-
-      /* OVERLAYS */
       #bot-overlay { position: absolute; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); display:none; flex-direction:column; align-items:center; justify-content:center; z-index: 50; }
       .bot-spinner { width: 50px; height: 50px; border: 5px solid #333; border-top-color: var(--text-main); border-radius: 50%; animation: spin 1s linear infinite; }
       @keyframes spin { 100% { transform: rotate(360deg); } }
-
       .msg-overlay { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-10deg) scale(0.5); font-size: 3.5rem; font-weight: 900; opacity: 0; pointer-events: none; z-index: 200; text-shadow: 0 10px 30px rgba(0,0,0,0.8); transition: 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); white-space: nowrap; }
       .msg-overlay.show { opacity: 1; transform: translate(-50%, -50%) rotate(-10deg) scale(1); }
       .txt-bust { color: var(--red-pastel); -webkit-text-stroke: 2px black; } .txt-win { color: var(--green-pastel); -webkit-text-stroke: 2px black; transform: translate(-50%, -50%) rotate(0) scale(1) !important; }
-
       .modal-bg { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); backdrop-filter: blur(5px); z-index: 300; display: none; flex-direction: column; align-items: center; justify-content: center; }
-      .modal-content { background: var(--bg-panel); padding: 30px; border-radius: 20px; border: 1px solid #444; width: 90%; max-width: 500px; text-align: center; }
+      .modal-content { background: var(--bg-panel); padding: 30px; border-radius: 20px; border: 1px solid #444; width: 90%; max-width: 500px; text-align: center; position: relative; }
       .m-opts { display: flex; gap: 15px; justify-content: center; margin-top: 20px; }
       .m-btn { width: 80px; height: 80px; font-size: 2rem; font-weight: 900; border-radius: 15px; border: none; cursor: pointer; background: #333; color: white; }
       .m-btn.acc { background: var(--green-pastel); color: black; }
+      .modal-close { position: absolute; top: 10px; right: 15px; background: transparent; border: none; color: var(--text-sub); font-size: 1.5rem; cursor: pointer; font-weight: bold; }
+      .modal-close:hover { color: var(--red-pastel); }
       .stats-tbl { width: 100%; border-collapse: collapse; margin-top: 20px; }
       .stats-tbl td, .stats-tbl th { padding: 12px; border-bottom: 1px solid #333; color: #ddd; font-weight: bold; }
       .stats-tbl th { color: #888; font-size: 0.8rem; }
-
       @media (max-width: 800px) {
           .layout-board .scores-section { width: 100%; height: 25%; flex-direction: row; border-right: none; border-bottom: 1px solid var(--border); }
           .layout-board .player-card { border-bottom: none; border-right: 1px solid #333; padding: 5px; }
           .layout-board .input-section { width: 100%; height: 75%; }
           .p-score { font-size: 3rem; }
           .board-center-row { flex-direction: column; }
-          .miss-vertical { width: 100%; height: 50px; writing-mode: horizontal-tb; text-orientation: mixed; margin-bottom: 10px; margin-left: 0; }
-          svg { height: 90%; }
       }
     </style>
   </head>
@@ -168,7 +129,6 @@
       </div>
       <button class="start-btn" onclick="startGame()">START</button>
     </div>
-
     <div id="starter-modal" class="modal-bg">
         <div class="modal-content">
             <h2 style="color: var(--gold); margin-bottom: 30px; font-size: 1.5rem;">KTO ZACZYNA?</h2>
@@ -178,9 +138,7 @@
             </div>
         </div>
     </div>
-
     <div id="game" class="layout-keypad">
-        
         <div class="game-header">
             <button class="abort-btn" onclick="abortGame()">✕</button>
             <div class="legs-score" id="match-score">0 : 0</div>
@@ -189,7 +147,6 @@
                 <button class="vt-btn" onclick="switchMode('board')">🎯</button>
             </div>
         </div>
-
         <div class="game-content">
             <div class="scores-section">
                 <div id="p0" class="player-card">
@@ -204,7 +161,6 @@
                     </div>
                     <div id="msg0" class="msg-overlay txt-bust">BUST!</div>
                 </div>
-
                 <div id="p1" class="player-card">
                     <div class="p-name" id="name1">P2</div>
                     <div class="p-score" id="s1">501</div>
@@ -218,9 +174,7 @@
                     <div id="msg1" class="msg-overlay txt-bust">BUST!</div>
                 </div>
             </div>
-
             <div class="input-section">
-                
                 <div id="keypad-ui">
                     <input id="disp" class="input-display" readonly />
                     <div class="key-grid">
@@ -231,27 +185,21 @@
                         <button class="key-btn k-back" onclick="askUndo()" style="grid-column: span 3">COFNIJ RUCH</button>
                     </div>
                 </div>
-
                 <div id="dartboard-ui">
                     <div class="slots-container">
                         <div id="slot1" class="slot">-</div>
                         <div id="slot2" class="slot">-</div>
                         <div id="slot3" class="slot">-</div>
                     </div>
-                    
                     <div class="board-center-row">
-                        <div class="board-svg-container" id="svg-wrap">
-                            </div>
-                        <button class="miss-vertical" onclick="hitBoard(0, null, 'MISS')">PUDŁO</button>
+                        <div class="board-svg-container" id="svg-wrap"></div>
                     </div>
-
                     <div class="board-actions">
-                        <button class="act-btn btn-undo-turn" onclick="askUndo()">COFNIJ TURĘ</button>
-                        <button class="act-btn btn-undo" onclick="undoDart()">COFNIJ LOTKĘ</button>
-                        <button class="act-btn btn-ok" onclick="submitDarts()">ZATWIERDŹ</button>
+                        <button class="act-btn btn-undo-turn" onclick="event.stopPropagation(); askUndo()">COFNIJ TURĘ</button>
+                        <button class="act-btn btn-undo" onclick="event.stopPropagation(); undoDart()">COFNIJ LOTKĘ</button>
+                        <button class="act-btn btn-ok" onclick="event.stopPropagation(); submitDarts()">ZATWIERDŹ</button>
                     </div>
                 </div>
-
                 <div id="bot-overlay">
                     <div class="bot-spinner"></div>
                     <h3 style="color:white; margin-top:20px; letter-spacing:2px">BOT THINKING...</h3>
@@ -259,7 +207,6 @@
             </div>
         </div>
     </div>
-
     <div id="undo-modal" class="modal-bg">
         <div class="modal-content">
             <h2 style="color:white; margin-bottom:20px">CZY COFNĄĆ TURĘ?</h2>
@@ -269,14 +216,13 @@
             </div>
         </div>
     </div>
-
     <div id="checkout-modal" class="modal-bg">
         <div class="modal-content">
+            <button class="modal-close" onclick="closeCheckout()">✕</button>
             <h2 style="color:white; margin:0" id="cm-title">PYTANIE</h2>
             <div class="m-opts" id="cm-opts"></div>
         </div>
     </div>
-
     <div id="match-details-overlay" class="modal-bg">
         <div class="modal-content">
             <h2 style="color:var(--green-pastel)">KONIEC MECZU</h2>
@@ -288,7 +234,6 @@
             <button class="act-btn btn-ok" style="margin-top:20px; width:100%" onclick="reset()">MENU GŁÓWNE</button>
         </div>
     </div>
-
     <script src="/socket.io/socket.io.js"></script>
     <script>
       const socket = io();
@@ -296,14 +241,94 @@
       let tempVal = 0;
       let inputMode = 'keypad';
       let dartBuffer = []; 
-      
-      // Zmienna do przechowywania konfigu przed wyborem kto zaczyna
       let pendingGameConfig = null;
+      let isThrowing = false;
+
+      document.addEventListener('keydown', (e) => {
+          if (e.repeat) return;
+          if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
+          
+          const cm = document.getElementById('checkout-modal');
+          if (cm && cm.style.display === 'flex') {
+              e.preventDefault();
+              const key = e.key.toLowerCase();
+              if (key === 'escape' || key === 'x') {
+                  closeCheckout();
+                  return;
+              }
+              const title = document.getElementById('cm-title').innerText;
+              if (title === "PUDŁA NA DUBLU?") {
+                  if (key === 'q') triggerModalBtn('0');
+                  else if (key === 'w') triggerModalBtn('1');
+                  else if (key === 'e') triggerModalBtn('2');
+                  else if (key === 'r') triggerModalBtn('3');
+              } else if (title === "KTÓRĄ LOTKĄ?") {
+                  if (key === '1') triggerModalBtn('1');
+                  else if (key === '2') triggerModalBtn('2');
+                  else if (key === '3') triggerModalBtn('3');
+              }
+              return;
+          }
+          
+          const um = document.getElementById('undo-modal');
+          if (um && um.style.display === 'flex') {
+              e.preventDefault();
+              if (e.key === 'Escape') closeUndoModal();
+              if (e.key === 'Enter') confirmUndo();
+              return;
+          }
+          
+          const sm = document.getElementById('starter-modal');
+          if (sm && sm.style.display === 'flex') return;
+          
+          const md = document.getElementById('match-details-overlay');
+          if (md && md.style.display === 'flex') {
+              if (e.key === 'Enter') { e.preventDefault(); reset(); }
+              return;
+          }
+          
+          if (document.getElementById('game').style.display === 'flex') {
+              if (inputMode === 'keypad') {
+                  const key = e.key.toLowerCase();
+                  if (key >= '0' && key <= '9') { e.preventDefault(); k(key); }
+                  else if (key === 'enter') { e.preventDefault(); preSend(); }
+                  else if (key === 'backspace') { e.preventDefault(); del(); }
+                  else if (key === 'b') { e.preventDefault(); sendBust(); }
+                  else if (key === 'n') { e.preventDefault(); sendNoScore(); }
+              } else if (inputMode === 'board') {
+                  if (e.key === 'Enter') { e.preventDefault(); submitDarts(); }
+                  else if (e.key === 'Backspace') { e.preventDefault(); undoDart(); }
+              }
+          }
+      });
+
+      function triggerModalBtn(val) {
+          const btns = document.querySelectorAll('#cm-opts .m-btn');
+          btns.forEach(b => {
+              if (b.innerText === val) b.click();
+          });
+      }
+
+      function closeCheckout() {
+          document.getElementById('checkout-modal').style.display = 'none';
+          document.getElementById('disp').value = "";
+      }
+
+      function sendBust() {
+          if (myScore <= 180) {
+              send(myScore, 0, 3, ['MISS']);
+          } else {
+              send(0, 0, 3, null);
+          }
+      }
+
+      function sendNoScore() {
+          send(0, 0, 3, null);
+      }
 
       function switchMode(m) {
           inputMode = m;
           const container = document.getElementById('game');
-          
           if(m==='keypad') {
               container.className = 'layout-keypad';
               document.getElementById('keypad-ui').style.display='flex';
@@ -315,7 +340,6 @@
               if(!document.querySelector('#svg-wrap svg')) drawBoard();
               updateSlots();
           }
-          
           document.querySelectorAll('.vt-btn').forEach(b => b.classList.remove('active'));
           event.target.classList.add('active');
       }
@@ -326,14 +350,19 @@
           const svg = document.createElementNS(ns, "svg");
           svg.setAttribute("viewBox", "-200 -200 400 400");
           svg.style.width = "100%"; svg.style.height = "100%";
+          
+          const bg = document.createElementNS(ns, "rect");
+          bg.setAttribute("x", "-5000"); bg.setAttribute("y", "-5000");
+          bg.setAttribute("width", "10000"); bg.setAttribute("height", "10000");
+          bg.setAttribute("class", "svg-miss-bg"); 
+          bg.onclick = () => hitBoard(0, null, 'MISS'); 
+          svg.appendChild(bg); 
 
           const nums = [20,1,18,4,13,6,10,15,2,17,3,19,7,16,8,11,14,9,12,5];
           const radii = [0, 6.35, 15.9, 99, 109, 162, 170]; 
-
           for(let i=0; i<20; i++) {
               const a1 = (i*18 - 9) * Math.PI/180;
               const a2 = ((i+1)*18 - 9) * Math.PI/180;
-              
               const mkPath = (rIn, rOut, type) => {
                   const x1=Math.sin(a1)*rIn, y1=-Math.cos(a1)*rIn;
                   const x2=Math.sin(a2)*rIn, y2=-Math.cos(a2)*rIn;
@@ -344,15 +373,13 @@
                   p.setAttribute("d", d);
                   let col = (i%2===0)?"black":"#e0e0e0";
                   if(type==='D' || type==='T') col = (i%2===0)?"#e57373":"#81c784";
-                  
                   p.setAttribute("fill", col); p.setAttribute("stroke", "#555"); p.setAttribute("stroke-width","1");
                   let val = nums[i];
                   let score = val; if(type==='D') score*=2; if(type==='T') score*=3;
                   let lbl = val.toString(); if(type==='D') lbl="D"+val; if(type==='T') lbl="T"+val;
                   let pid = val.toString(); if(type==='D') pid="D"+val; if(type==='T') pid="T"+val;
-                  p.onclick = () => hitBoard(score, pid, lbl);
+                  p.onclick = (e) => { e.stopPropagation(); hitBoard(score, pid, lbl); };
                   svg.appendChild(p);
-
                   if(type==='D') {
                       const ta = (i*18)*Math.PI/180;
                       const tx = Math.sin(ta)*185, ty = -Math.cos(ta)*185;
@@ -360,18 +387,17 @@
                       txt.setAttribute("x",tx); txt.setAttribute("y",ty);
                       txt.setAttribute("text-anchor","middle"); txt.setAttribute("dominant-baseline","middle");
                       txt.setAttribute("fill","white"); txt.setAttribute("font-size","16"); txt.setAttribute("font-weight","900");
+                      txt.setAttribute("pointer-events", "none"); 
                       txt.textContent = val;
                       svg.appendChild(txt);
                   }
               };
-              
               mkPath(162, 170, 'D'); mkPath(109, 162, 'S'); mkPath(99, 109, 'T'); mkPath(15.9, 99, 'S');
           }
-          
           const mkCirc = (rad, val, id, lbl, col) => {
               const c = document.createElementNS(ns,"circle");
               c.setAttribute("r", rad); c.setAttribute("fill", col); c.setAttribute("stroke", "#555");
-              c.onclick = () => hitBoard(val, id, lbl);
+              c.onclick = (e) => { e.stopPropagation(); hitBoard(val, id, lbl); };
               svg.appendChild(c);
           };
           mkCirc(15.9, 25, "25", "25", "#81c784"); mkCirc(6.35, 50, "BULL", "BULL", "#e57373");
@@ -382,11 +408,6 @@
           if(dartBuffer.length >= 3) return;
           dartBuffer.push({s:score, id:id, l:label});
           updateSlots();
-          const sum = dartBuffer.reduce((a,b)=>a+b.s,0);
-          const rem = myScore - sum;
-          if(rem < 0 || rem === 1) {
-              // Bust logic handled in submitDarts
-          }
       }
 
       function undoDart() {
@@ -415,20 +436,15 @@
           const rem = myScore - total;
           const savedBuffer = [...dartBuffer];
           dartBuffer = []; updateSlots();
-
+          
           if(rem === 0) {
               const isDouble = seg.startsWith('D') || seg === 'BULL';
-              if(isDouble) {
-                  send(total, 0, savedBuffer.length, allSegments);
-              } else {
-                  send(total, 0, 3, allSegments);
-              }
+              if(isDouble) { send(total, 0, savedBuffer.length, allSegments); } 
+              else { send(total, 0, 3, allSegments); }
               return;
           }
-
           const bogeyNumbers = [169, 168, 166, 165, 163, 162, 159];
           const isCheckoutRange = (myScore <= 170 && !bogeyNumbers.includes(myScore));
-          
           if (isCheckoutRange && rem > 1) { 
               const m = document.getElementById('checkout-modal');
               const t = document.getElementById('cm-title');
@@ -441,19 +457,18 @@
               });
               return;
           }
-          
           send(total, 0, 3, allSegments);
       }
 
       const inp = document.getElementById("disp");
       function k(n) { if(inp.value.length<3) inp.value+=n; }
       function del() { inp.value = inp.value.slice(0,-1); }
+      
       function preSend() {
           if(!inp.value) return;
           const p = parseInt(inp.value); if(isNaN(p)) return;
           tempVal = p;
           const rem = myScore - p;
-          
           if(rem === 0) {
               const m = document.getElementById('checkout-modal');
               const t = document.getElementById('cm-title');
@@ -468,7 +483,6 @@
           }
           const bogey = [169,168,166,165,163,162,159];
           const isCheck = (myScore <= 170 && !bogey.includes(myScore));
-          
           if(isCheck) {
               const m = document.getElementById('checkout-modal');
               const t = document.getElementById('cm-title');
@@ -485,8 +499,11 @@
       }
 
       function send(val, misses, darts, segs) {
+          if (isThrowing) return;
+          isThrowing = true;
           socket.emit("throw", { val, doublesMissed: misses, finishDarts: darts, segments: segs });
           inp.value = "";
+          setTimeout(() => { isThrowing = false; }, 500);
       }
 
       function updBot(v) { document.getElementById("bot-lbl").innerText = `~${v}`; }
@@ -494,41 +511,31 @@
       function toggleBot(v) { const b = v==="BOT"; document.getElementById("bot-opts").style.display=b?"block":"none"; document.getElementById("p2-stats-btn").style.display=b?"none":"block"; }
       function promptUser() { const n=prompt("Nazwa:"); if(n) socket.emit("create_user", n); }
       
-      // *** NOWA LOGIKA STARTU ***
       function startGame() { 
           const s = document.getElementById("c-score").value; const l = document.getElementById("c-legs").value;
           if(s<101 || l<1) { alert("Błędne dane!"); return; }
-          
-          // Zapisujemy konfig
           pendingGameConfig = {
               startScore:s, legsToWin:l, 
               botLevel:document.getElementById("c-bot").value, botCheckout:document.getElementById("c-bot-co").value,
               p1Id:document.getElementById("p1-sel").value, p2Id:document.getElementById("p2-sel").value
           };
-          
-          // Pokazujemy popup kto zaczyna
           document.getElementById('starter-modal').style.display = 'flex';
       }
 
-      // Funkcja potwierdzająca wybór startera
       function confirmStart(starterIndex) {
           if(!pendingGameConfig) return;
           pendingGameConfig.starter = starterIndex;
           socket.emit("startGame", pendingGameConfig);
           document.getElementById('starter-modal').style.display = 'none';
-          document.getElementById('setup').style.display = 'none'; // Na wszelki wypadek ukryj od razu
       }
 
       function abortGame() { if(confirm("Przerwać?")) socket.emit("abort_game"); }
       function reset() { document.getElementById("match-details-overlay").style.display="none"; socket.emit("reset"); }
-      
       function askUndo() { document.getElementById('undo-modal').style.display = 'flex'; }
       function closeUndoModal() { document.getElementById('undo-modal').style.display = 'none'; }
       function confirmUndo() { socket.emit("undo"); closeUndoModal(); }
-      function undo() { askUndo(); }
-
       function goToStats(uid) { if(!uid || uid==="BOT") return alert("Wybierz gracza"); window.location.href=`/stats?user=${uid}`; }
-
+      
       socket.on("users_list", (u) => {
           const p1=document.getElementById("p1-sel"), p2=document.getElementById("p2-sel");
           const v1=p1.value, v2=p2.value; p1.innerHTML=""; p2.innerHTML="<option value='BOT'>GRA Z BOTEM</option>";
@@ -539,7 +546,6 @@
           if(v1) p1.value=v1; if(v2) p2.value=v2;
       });
 
-      // CHECKOUT HINTS
       const CheckoutEngine = {
           getValid: function() { let t=[50,25]; for(let i=20;i>=1;i--){t.push(i*3);t.push(i);if(i!==25)t.push(i*2);} return t; },
           fmt: function(v) { if(v===50)return "BULL"; if(v===25)return "25"; if(v<=20)return v; if(v<=60&&v%3===0)return "T"+(v/3); if(v<=40&&v%2===0)return "D"+(v/2); return v; },
@@ -560,7 +566,6 @@
               setup.style.display = "flex"; 
               game.style.display = "none"; 
               document.getElementById('match-details-overlay').style.display='none'; 
-              // Ukryj modal jeśli ktoś przerwał grę
               document.getElementById('starter-modal').style.display='none';
           }
           else if (s.status === "MATCH_FINISHED") { 
@@ -581,9 +586,7 @@
           } else {
               setup.style.display="none"; game.style.display="flex";
               document.getElementById("match-score").innerText = `${s.legs[0]} : ${s.legs[1]}`;
-              
               myScore = s.players[s.turn].score;
-              
               s.players.forEach((p, i) => {
                   document.getElementById(`name${i}`).innerText = p.name;
                   document.getElementById(`s${i}`).innerText = p.score;
@@ -591,11 +594,9 @@
                   document.getElementById(`sc${i}`).innerText = p.scoringAvg;
                   document.getElementById(`co${i}`).innerText = p.matchStats.checkoutPercent;
                   document.getElementById(`d${i}`).innerText = p.dartsThrown;
-                  
                   const col = document.getElementById(`p${i}`);
                   const isTurn = s.turn === i;
                   if(isTurn) col.classList.add("active"); else col.classList.remove("active");
-                  
                   const hb = document.getElementById(`h${i}`); hb.innerHTML="";
                   if(isTurn && !p.isBot) {
                       CheckoutEngine.get(p.score).forEach((txt, idx) => {
@@ -604,16 +605,13 @@
                           hb.appendChild(d);
                       });
                   }
-
                   const m = document.getElementById(`msg${i}`);
                   if(p.status==="BUST") { m.innerText="BUST!"; m.className="msg-overlay txt-bust show"; }
                   else if(p.status==="GAME SHOT") { m.innerText="GAME SHOT!"; m.className="msg-overlay txt-win show"; }
                   else { m.className="msg-overlay"; }
               });
-
               const isBot = s.players[s.turn].isBot;
               document.getElementById("bot-overlay").style.display = isBot ? "flex" : "none";
-              
               if(!isBot) {
                   document.getElementById("keypad-ui").style.display = inputMode==='keypad'?"flex":"none";
                   document.getElementById("dartboard-ui").style.display = inputMode==='board'?"flex":"none";
@@ -625,7 +623,6 @@
         const soundPath = "/sounds/";
         let audioFile = null;
         let textToSpeak = "";
-
         if (d.type === "gameon") audioFile = "gameon.wav";
         else if (d.type === "score") {
             const val = d.val;
@@ -635,7 +632,7 @@
         }
         else if (d.type === "bust") textToSpeak = "Bust";
         else if (d.type === "gameshot") textToSpeak = "Game Shot";
-
+        
         if (audioFile) {
             const audio = new Audio(soundPath + audioFile);
             audio.play().catch(err => { if (textToSpeak) speak(textToSpeak); });

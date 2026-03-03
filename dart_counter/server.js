@@ -90,7 +90,6 @@ io.on("connection", (socket) => {
     };
     gameState.legs = [0, 0];
     
-    // Ustawiamy startera na podstawie wyboru z popupu
     gameState.starter = (cfg.starter !== undefined) ? cfg.starter : 0;
     
     gameState.legDarts = [0, 0]; 
@@ -105,14 +104,12 @@ io.on("connection", (socket) => {
       createPlayer(1, p2Name, gameState.config.startScore, isBot, isBot ? null : cfg.p2Id)
     ];
 
-    // Ustawiamy turę na tego kto ma zacząć
     gameState.turn = gameState.starter;
     gameState.status = "PLAYING";
     
     io.emit("update", gameState);
     io.emit("voice", { type: "gameon" });
     
-    // Jeśli zaczyna Bot/Rywal, checkBot to wykryje i rzuci
     checkBot();
   });
 
@@ -134,33 +131,24 @@ io.on("connection", (socket) => {
     handleThrow(points, doublesMissed, finishDarts, segments);
   });
 
-  // --- POPRAWIONE UNDO ---
   socket.on("undo", () => {
-      // 1. Najważniejsze: zatrzymaj bota, jeśli myśli
       if (botTimeout) {
           clearTimeout(botTimeout);
           botTimeout = null;
       }
 
       if (historyStack.length > 0) {
-          // Cofnij ostatni ruch (to zazwyczaj ruch bota)
           gameState = historyStack.pop();
 
-          // Jeśli gramy z botem (botLevel > 0) i po cofnięciu jest tura bota (turn === 1),
-          // to znaczy, że cofnęliśmy tylko jego rzut. Cofamy raz jeszcze, żeby wrócić do Gracza.
-          if (gameState.config.botLevel > 0 && gameState.turn === 1) {
-              if (historyStack.length > 0) {
-                  gameState = historyStack.pop();
-              }
+          if (gameState.players[gameState.turn].isBot && historyStack.length > 0) {
+              gameState = historyStack.pop();
           }
 
           io.emit("update", gameState);
 
-          // Jeśli mimo wszystko wypadło na bota, niech myśli od nowa
           if (gameState.players[gameState.turn].isBot) checkBot();
       }
   });
-  // -----------------------
 
   socket.on("reset", () => {
     clearTimeout(botTimeout);
@@ -547,7 +535,6 @@ function generateSingleMatchStats(userId, m, allMatches) {
     };
 }
 
-// --- PORT 3100 Z ŁADNYM OZNACZENIEM W KONSOLI ---
 const PORT = 3100;
 server.listen(PORT, "0.0.0.0", () => {
     console.log("");
